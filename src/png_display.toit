@@ -61,7 +61,7 @@ class PngDriver extends AbstractDriver:
 
     stream.write ihdr
     stream.write
-      byte_swap
+      byte_swap_
         crc32 ihdr[4..]  // Don't checksum length of section.
 
     idat ::= #[
@@ -74,16 +74,18 @@ class PngDriver extends AbstractDriver:
     compressed := Buffer
 
     task::
-      while buf := compressor.read:
-        compressed.write buf
+      while data := compressor.read:
+        compressed.write data
       done.set null
 
+    zero_byte := #[0]
     height.repeat: | y |
-      compressor.write #[0]  // Adaptive scheme.
+      compressor.write zero_byte  // Adaptive scheme.
       index := y * width * 3
       compressor.write buffer_[index..index + width * 3]
     compressor.close
 
+    // Wait for the reader task to finish.
     done.get
 
     output := compressed.take
@@ -96,18 +98,18 @@ class PngDriver extends AbstractDriver:
     crc.add idat[4..]
     crc.add output
     stream.write
-      byte_swap
+      byte_swap_
         crc.get
 
     iend := #[0, 0, 0, 0, 'I', 'E', 'N', 'D']
     stream.write iend
     stream.write
-      byte_swap
+      byte_swap_
         crc32 iend[4..]
 
     stream.close
 
-byte_swap ba/ByteArray -> ByteArray:
+byte_swap_ ba/ByteArray -> ByteArray:
   result := ByteArray 4
   BIG_ENDIAN.put_uint32 result 0
     LITTLE_ENDIAN.uint32 ba 0
