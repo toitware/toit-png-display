@@ -2,3 +2,5 @@ dependencies:
   pixel_display:
     url: github.com/toitware/toit-pixel-display
     version: ^1.1.0
+  server:
+    path: ../toit/system/lib/server
