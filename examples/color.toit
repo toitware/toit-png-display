@@ -25,7 +25,7 @@ main:
 
   display.text context 20 200 "Rain with thunder"
   display.icon icon_context 200 120 icons.WEATHER_LIGHTNING_RAINY
-  display.text time 20 40 "15:30"
+  display.text time 20 40 "13:37"
   display.text location_context 20 100 "Borås"
   display.draw
 
