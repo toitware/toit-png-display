@@ -11,7 +11,7 @@ import roboto.black_36 as black
 import pictogrammers_icons.size_96 as icons
 
 main:
-  driver := PngDriver 320 240
+  driver := TrueColorPngDriver 320 240
   display := TrueColorPixelDisplay driver
   display.background = get_rgb 30 30 30
 
@@ -29,4 +29,4 @@ main:
   display.text location_context 20 100 "Borås"
   display.draw
 
-  driver.write "toit.png"
+  driver.write "weather.png"

@@ -5,6 +5,6 @@
 import png_display show *
 
 main:
-  driver := PngDriver 1 1
+  driver := TrueColorPngDriver 1 1
   print "Writing out.png"
-  driver.write "out.png"
+  driver.write "1x1.png"
