@@ -1,6 +1,8 @@
 prefixes:
+  pictogrammers_icons: toit-icons-pictogrammers
   pixel_display: toit-pixel-display
   png_display: ..
+  roboto: toit-font-google-100dpi-roboto
 packages:
   ..:
     path: ..
@@ -9,6 +11,12 @@ packages:
       server: server
   server:
     path: ../../toit/system/lib/server
+  toit-font-google-100dpi-roboto:
+    url: github.com/toitware/toit-font-google-100dpi-roboto
+    version: 1.1.0
+  toit-icons-pictogrammers:
+    url: github.com/toitware/toit-icons-pictogrammers
+    version: 1.0.0
   toit-pixel-display:
     url: github.com/toitware/toit-pixel-display
     version: 1.1.0
