@@ -37,7 +37,6 @@ WMO_4501_ICONS ::= [
 // have access one at a time.
 display_mutex := Mutex
 
-//display := get_display
 driver := TwoColorPngDriver 128 64
 display:= TwoColorPixelDisplay driver
 
