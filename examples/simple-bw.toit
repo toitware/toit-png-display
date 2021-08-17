@@ -12,9 +12,13 @@ main:
   display := TwoColorPixelDisplay driver
   display.background = WHITE
 
-  context := display.context --landscape --color=BLACK --font=(Font.get "sans10")
+  font := Font.get "sans10"
 
-  display.text context 20 30 "Toit"
+  black := display.context --landscape --color=BLACK --font=font
+  white := display.context --landscape --color=WHITE --font=font
+
+  display.filled_rectangle black 15 15 40 30
+  display.text white 20 30 "Toit"
   display.draw
 
   print "Writing simple-bw.png"

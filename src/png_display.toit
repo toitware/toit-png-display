@@ -35,11 +35,22 @@ class TrueColorPngDriver extends PngDriver_:
 abstract class PngDriver_ extends AbstractDriver:
   width/int ::= ?
   height/int ::= ?
+  rounded_width_/int := 0
   buffer_/ByteArray? := null
+  temp_buffer_/ByteArray := #[]
+  temps_ := List 8
   abstract width_to_byte_width w/int -> int
 
+  static INVERT_ := ByteArray 0x100: 0xff - it
+
   constructor .width .height:
-    buffer_ = ByteArray height * (width_to_byte_width width)
+    w := width
+    h := height
+    if flags & FLAG_TRUE_COLOR == 0:
+      w = round_up width 8
+      h = round_up height 8
+    rounded_width_ = w
+    buffer_ = ByteArray h * (width_to_byte_width w)
 
   draw_true_color left/int top/int right/int bottom/int red/ByteArray green/ByteArray blue/ByteArray -> none:
     bottom = min bottom height
@@ -47,38 +58,73 @@ abstract class PngDriver_ extends AbstractDriver:
     patch_height := bottom - top
 
     // Pack 3 pixels in three consecutive bytes.  Since we receive the data in
-    // three one-byte-per-pixel buffers we have to shuffle the bytes.  Some
-    // duplication to keep the performance-critical inner loop as simple as
-    // possible.
-    patch_height.repeat: | y |
-      idx := y * patch_width
-      i := width_to_byte_width (left + (y + top) * width)
-      patch_width.repeat:
-        j := idx + it
-        buffer_[i++] = red[j]
-        buffer_[i++] = green[j]
-        buffer_[i++] = blue[j]
+    // three one-byte-per-pixel buffers we have to shuffle the bytes.
+    index := (left + top * width) * 3
+    blit red   buffer_[index..]     patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+    blit green buffer_[index + 1..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+    blit blue  buffer_[index + 2..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
 
   draw_two_color left/int top/int right/int bottom/int pixels/ByteArray -> none:
-    draw_bits_ left top right bottom pixels null
+    if temp_buffer_.size < pixels.size:
+      temp_buffer_ = ByteArray pixels.size
+      8.repeat:
+        temps_[it] = temp_buffer_[it..]
+
+    patch_width := right - left
+    patch_height := bottom - top
+    // Writes the patch to the buffer.  The patch is arranged as height/8
+    // strips of width bytes, where each byte represents 8 vertically stacked
+    // pixels, lsbit at the top.  PNG requires these be transposed so that each
+    // line is represented by consecutive bytes, from top to bottom, msbit on
+    // the left.
+
+    input_bytes := (patch_width * patch_height) >> 3
+
+    pixels_0 := pixels[0..input_bytes]
+    pixels_1 := pixels[1..input_bytes]
+    pixels_2 := pixels[2..input_bytes]
+    pixels_4 := pixels[4..input_bytes]
+
+    // We start by reflecting each 8x8 block.
+    // Reflect each 2x2 pixel block.
+    blit pixels_0 temps_[0] patch_width/2 --source_pixel_stride=2 --destination_pixel_stride=2 --mask=0xaa
+    blit pixels_1 temps_[1] patch_width/2 --source_pixel_stride=2 --destination_pixel_stride=2 --mask=0x55
+    blit pixels_0 temps_[1] patch_width/2 --source_pixel_stride=2 --destination_pixel_stride=2 --shift=-1 --mask=0xaa --operation=OR
+    blit pixels_1 temps_[0] patch_width/2 --source_pixel_stride=2 --destination_pixel_stride=2 --shift=1 --mask=0x55 --operation=OR
+    // Reflect each 4x4 pixel block.  Blit is treating each 4x8 block as a line for this operation.
+    blit temps_[0] pixels_0 2 --source_line_stride=4 --destination_line_stride=4 --mask=0xcc
+    blit temps_[2] pixels_2 2 --source_line_stride=4 --destination_line_stride=4 --mask=0x33
+    blit temps_[0] pixels_2 2 --source_line_stride=4 --destination_line_stride=4 --shift=-2 --mask=0xcc --operation=OR
+    blit temps_[2] pixels_0 2 --source_line_stride=4 --destination_line_stride=4 --shift=2 --mask=0x33 --operation=OR
+    // Reflect each 8x8 pixel block.  Blit is treating each 8x8 block as a line for this operation.
+    blit pixels_0 temps_[0] 4 --source_line_stride=8 --destination_line_stride=8 --mask=0xf0
+    blit pixels_4 temps_[4] 4 --source_line_stride=8 --destination_line_stride=8 --mask=0x0f
+    blit pixels_0 temps_[4] 4 --source_line_stride=8 --destination_line_stride=8 --shift=-4 --mask=0xf0 --operation=OR
+    blit pixels_4 temps_[0] 4 --source_line_stride=8 --destination_line_stride=8 --shift=4 --mask=0x0f --operation=OR
+
+    output_area := buffer_[(left + top * rounded_width_) >> 3..((right + (bottom - 1) * rounded_width_)) >> 3]
+
+    // Now we need to spread the 8x8 blocks out over the lines they belong on.
+    // First line is bytes 0, 8, 16..., next line is bytes 1, 9, 17... etc.
+    8.repeat:
+      index := (rounded_width_ * (7 - it)) >> 3
+      blit temps_[it] output_area[index..] (patch_width >> 3) --source_pixel_stride=8 --destination_line_stride=rounded_width_ --lookup_table=INVERT_
 
   draw_two_bit left/int top/int right/int bottom/int plane_0/ByteArray plane_1/ByteArray -> none:
-    draw_bits_ left top right bottom plane_0 plane_1
-
-  draw_bits_ left/int top/int right/int bottom/int plane_0/ByteArray plane_1/ByteArray? -> none:
     one_bit := plane_1 == null
     patch_width := right - left
     patch_height := bottom - top
 
-    byte_width := width_to_byte_width width
+    byte_width := width_to_byte_width rounded_width_
 
     // Writes part of the patch to the buffer.  The patch is arranged as
     // height/8 strips of width bytes, where each byte represents 8 vertically
     // stacked pixels.  PNG requires these be transposed so that each
-    // line is represented by consecutive bytes, from top to bottom.
+    // line is represented by consecutive bytes, from top to bottom, msbit on
+    // the left.
     byte_x := width_to_byte_width left
     row := 0
-    ppb := one_bit ? 8 : 4  // Pixels per byte.
+    ppb := 4  // Pixels per byte.
     for y := 0; y < patch_height; y += 8:
       for in_bit := 0; in_bit < 8 and y + top + in_bit < height; in_bit++:
         out_index := (y + in_bit + top) * byte_width + byte_x
@@ -86,13 +132,10 @@ abstract class PngDriver_ extends AbstractDriver:
           out := 0
           byte_pos := row + x + ppb - 1
           for out_bit := ppb - 1; out_bit >= 0; out_bit--:
-            if one_bit:
-              out |= ((plane_0[byte_pos - out_bit] >> in_bit) & 1) << out_bit
-            else:
-              out |= ((plane_0[byte_pos - out_bit] >> in_bit) & 1) << (out_bit * 2)
-              out |= ((plane_1[byte_pos - out_bit] >> in_bit) & 1) << (out_bit * 2 + 1)
-          buffer_[out_index + (width_to_byte_width x)] = one_bit ? (out ^ 0xff) : out
-      row += width
+            out |= ((plane_0[byte_pos - out_bit] >> in_bit) & 1) << (out_bit * 2)
+            out |= ((plane_1[byte_pos - out_bit] >> in_bit) & 1) << (out_bit * 2 + 1)
+          buffer_[out_index + (width_to_byte_width x)] = out
+      row += rounded_width_
 
   static HEADER ::= #[0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n']
 
