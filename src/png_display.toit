@@ -44,11 +44,11 @@ abstract class PngDriver_ extends AbstractDriver:
   static INVERT_ := ByteArray 0x100: 0xff - it
 
   constructor .width .height:
-    w := round_up width 8
-    h := round_up height 8
-    if ((flags & FLAG_TRUE_COLOR) != 0):
-      w = width
-      h = height
+    w := width
+    h := height
+    if flags & FLAG_TRUE_COLOR == 0:
+      w = round_up width 8
+      h = round_up height 8
     rounded_width_ = w
     buffer_ = ByteArray h * (width_to_byte_width w)
 
