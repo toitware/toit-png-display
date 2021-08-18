@@ -2,13 +2,12 @@
 // Use of this source code is governed by an MIT-style license that can be
 // found in the LICENSE file.
 
-import binary show BIG_ENDIAN LITTLE_ENDIAN
+import binary show BIG_ENDIAN byte_swap_32
 import bitmap show *
 import bytes show Buffer
 import crypto.crc32 show *
 import monitor show Latch
 import pixel_display show *
-import pixel_display.true_color show *
 import server.file show *
 import zlib show *
 
@@ -32,6 +31,11 @@ class TrueColorPngDriver extends PngDriver_:
   constructor width height: super width height
   width_to_byte_width w: return w * 3
 
+class GrayScalePngDriver extends PngDriver_:
+  flags ::= FLAG_GRAY_SCALE | FLAG_PARTIAL_UPDATES
+  constructor width height: super width height
+  width_to_byte_width w: return w
+
 abstract class PngDriver_ extends AbstractDriver:
   width/int ::= ?
   height/int ::= ?
@@ -46,7 +50,7 @@ abstract class PngDriver_ extends AbstractDriver:
   constructor .width .height:
     w := width
     h := height
-    if flags & FLAG_TRUE_COLOR == 0:
+    if flags & (FLAG_TRUE_COLOR | FLAG_GRAY_SCALE) == 0:
       w = round_up width 8
       h = round_up height 8
     rounded_width_ = w
@@ -55,7 +59,6 @@ abstract class PngDriver_ extends AbstractDriver:
   draw_true_color left/int top/int right/int bottom/int red/ByteArray green/ByteArray blue/ByteArray -> none:
     bottom = min bottom height
     patch_width := right - left
-    patch_height := bottom - top
 
     // Pack 3 pixels in three consecutive bytes.  Since we receive the data in
     // three one-byte-per-pixel buffers we have to shuffle the bytes.
@@ -63,6 +66,14 @@ abstract class PngDriver_ extends AbstractDriver:
     blit red   buffer_[index..]     patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
     blit green buffer_[index + 1..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
     blit blue  buffer_[index + 2..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+
+  draw_gray_scale left/int top/int right/int bottom/int pixels/ByteArray -> none:
+    patch_width := right - left
+
+    // Copy the smaller rectangle of the pixels into the buffer with the
+    // complete image.
+    index := left + top * width
+    blit pixels buffer_[index..] patch_width --destination_line_stride=width
 
   draw_two_color left/int top/int right/int bottom/int pixels/ByteArray -> none:
     if temp_buffer_.size < pixels.size:
@@ -157,6 +168,7 @@ abstract class PngDriver_ extends AbstractDriver:
     true_color := flags & FLAG_TRUE_COLOR != 0
     gray := flags & FLAG_4_COLOR != 0
     three_color := flags & FLAG_3_COLOR != 0
+    gray_scale := flags & FLAG_GRAY_SCALE != 0
 
     stream := Stream.for_write filename
 
@@ -167,6 +179,9 @@ abstract class PngDriver_ extends AbstractDriver:
     if true_color:
       bits_per_pixel = 8
       color_type = 2  // True color.
+    else if gray_scale:
+      bits_per_pixel = 8
+      color_type = 0  // Gray scale.
     else if three_color:
       bits_per_pixel = 2
       color_type = 3  // Palette.
@@ -225,7 +240,6 @@ abstract class PngDriver_ extends AbstractDriver:
     stream.close
 
 byte_swap_ ba/ByteArray -> ByteArray:
-  result := ByteArray 4
-  BIG_ENDIAN.put_uint32 result 0
-    LITTLE_ENDIAN.uint32 ba 0
+  result := ba.copy
+  byte_swap_32 result
   return result
