@@ -5,23 +5,23 @@
 import font show *
 import png_display show *
 import pixel_display show *
-import pixel_display.true_color show *
+import pixel_display.gray_scale show *
 import roboto.bold_36 as bold
 import roboto.black_36 as black
 import pictogrammers_icons.size_96 as icons
 
 main:
-  driver := TrueColorPngDriver 320 240
-  display := TrueColorPixelDisplay driver
-  display.background = get_rgb 30 30 30
+  driver := GrayScalePngDriver 320 240
+  display := GrayScalePixelDisplay driver
+  display.background = 30
 
   font := Font [bold.ASCII, bold.LATIN_1_SUPPLEMENT]
   time_font := Font [black.ASCII]
 
-  context := display.context --landscape --color=(get_rgb 160 255 128) --font=font
-  icon_context := context.with --color=(get_rgb 200 255 255)
-  time := context.with --color=(get_rgb 200 100 80) --font=time_font
-  location_context := context.with --color=(get_rgb 255 240 230)
+  context := display.context --landscape --color=160 --font=font
+  icon_context := context.with --color=220
+  time := context.with --color=60 --font=time_font
+  location_context := context.with --color=120
 
   display.text context 20 200 "Rain with thunder"
   display.icon icon_context 200 120 icons.WEATHER_LIGHTNING_RAINY
@@ -29,4 +29,4 @@ main:
   display.text location_context 20 100 "Borås"
   display.draw
 
-  driver.write "weather.png"
+  driver.write "weather-gray.png"
