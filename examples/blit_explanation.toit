@@ -8,22 +8,26 @@ import pixel_display.texture show TEXT_TEXTURE_ALIGN_RIGHT TEXT_TEXTURE_ALIGN_LE
 import font.x11_100dpi.sans.sans_24_bold
 import font.x11_100dpi.typewriter.typewriter_14_bold
 
+// Generates the diagrams used on https://docs.toit.io/language/sdk/blit
+
+// PNG size generated.
 WIDTH ::= 1024
 HEIGHT ::= 768
 
+// Position and size of the source byte array in the PNG.
 SOURCE_Y ::= 100
 SOURCE_X ::= 50
-
 SOURCE_WIDTH ::= 30
 SOURCE_HEIGHT ::= 17
 
+// Size of each square (byte) in the byte array diagrams.
 BYTE_SIZE := 16
 
-DEST_WIDTH := 20
-DEST_HEIGHT := 25
-
+// Position and size of the destination byte array in the PNG.
 DEST_X ::= 600
 DEST_Y ::= 300
+DEST_WIDTH := 20
+DEST_HEIGHT := 25
 
 SANS_10 ::= Font.get "sans10"
 CODE_FONT := Font [typewriter_14_bold.ASCII]
@@ -32,6 +36,7 @@ main:
   diagram "blit"
   diagram "blit-stride" --pixel_stride=2 --extra_code="  --destination_pixel_stride=2"
 
+// Generates a PNG file showing how blit works.
 diagram filename/string --pixel_stride=1 --extra_code=null:
   driver := TrueColorPngDriver WIDTH HEIGHT
   display := TrueColorPixelDisplay driver
@@ -81,6 +86,7 @@ diagram filename/string --pixel_stride=1 --extra_code=null:
 
   driver.write "$(filename).png"
 
+// Used to display the code snippet in the diagram.
 class Code:
   display := ?
   x/int ::= ?
@@ -108,6 +114,7 @@ class Code:
     display.text code_context x y text
     y += 19
 
+// Draws the outline of a slice on a ByteArray of size W * H.
 slice display X Y W H left top right bottom:
   red_line := display.context --landscape --color=(get_rgb 255 0 0)
 
@@ -159,6 +166,7 @@ slice display X Y W H left top right bottom:
     right * BYTE_SIZE
     3
 
+// Draws an image in the ByteArray (some letters).
 picture display/TrueColorPixelDisplay text/string text_x/int text_y/int X/int Y/int W/int H/int --pixel_stride=1:
   fg := display.context --landscape --color=(get_rgb 255 190 170) --font=SANS_10
   bg := display.context --landscape --color=(get_rgb 192 150 110) --font=SANS_10
@@ -176,6 +184,7 @@ picture display/TrueColorPixelDisplay text/string text_x/int text_y/int X/int Y/
         BYTE_SIZE - 1
         BYTE_SIZE - 1
 
+// Draws a grid that represents a ByteArray used as a 2D bytemap.
 grid display label_context name lc_name X Y W H:
   context := display.context --landscape --color=BLACK --font=SANS_10
 
@@ -226,4 +235,3 @@ grid display label_context name lc_name X Y W H:
       y_line
       rhs - BYTE_SIZE/2
       y_line
-
