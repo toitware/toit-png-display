@@ -36,6 +36,11 @@ class GrayScalePngDriver extends PngDriver_:
   constructor width height: super width height
   width_to_byte_width w: return w
 
+class SeveralColorPngDriver extends PngDriver_:
+  flags ::= FLAG_SEVERAL_COLOR
+  constructor width height: super width height
+  width_to_byte_width w: return w
+
 abstract class PngDriver_ extends AbstractDriver:
   width/int ::= ?
   height/int ::= ?
@@ -50,7 +55,7 @@ abstract class PngDriver_ extends AbstractDriver:
   constructor .width .height:
     w := width
     h := height
-    if flags & (FLAG_TRUE_COLOR | FLAG_GRAY_SCALE) == 0:
+    if flags & (FLAG_TRUE_COLOR | FLAG_GRAY_SCALE | FLAG_SEVERAL_COLOR) == 0:
       w = round_up width 8
       h = round_up height 8
     rounded_width_ = w
@@ -68,6 +73,14 @@ abstract class PngDriver_ extends AbstractDriver:
     blit blue  buffer_[index + 2..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
 
   draw_gray_scale left/int top/int right/int bottom/int pixels/ByteArray -> none:
+    patch_width := right - left
+
+    // Copy the smaller rectangle of the pixels into the buffer with the
+    // complete image.
+    index := left + top * width
+    blit pixels buffer_[index..] patch_width --destination_line_stride=width
+
+  draw_several_color left/int top/int right/int bottom/int pixels/ByteArray -> none:
     patch_width := right - left
 
     // Copy the smaller rectangle of the pixels into the buffer with the
@@ -169,6 +182,7 @@ abstract class PngDriver_ extends AbstractDriver:
     gray := flags & FLAG_4_COLOR != 0
     three_color := flags & FLAG_3_COLOR != 0
     gray_scale := flags & FLAG_GRAY_SCALE != 0
+    several_color := flags & FLAG_SEVERAL_COLOR != 0
 
     stream := Stream.for_write filename
 
@@ -184,6 +198,9 @@ abstract class PngDriver_ extends AbstractDriver:
       color_type = 0  // Gray scale.
     else if three_color:
       bits_per_pixel = 2
+      color_type = 3  // Palette.
+    else if several_color:
+      bits_per_pixel = 8
       color_type = 3  // Palette.
     else if gray:
       bits_per_pixel = 2
@@ -209,6 +226,17 @@ abstract class PngDriver_ extends AbstractDriver:
           0, 0, 0,                  // 1 is black.
           0xff, 0, 0,               // 2 is red.
         ]
+    else if several_color:
+      // Use color palette of 7-color epaper display.
+      write_chunk stream "PLTE" #[  // Palette.
+          0xff, 0xff, 0xff,         // 0 is white.
+          0, 0, 0,                  // 1 is black.
+          0xff, 0, 0,               // 2 is red.
+          0, 0xff, 0,               // 3 is green
+          0, 0, 0xff,               // 4 is blue
+          0xff, 0xff, 0,            // 5 is yellow
+          0xff, 0xc0, 0,            // 6 is orange
+        ]
 
     compressor := RunLengthZlibEncoder
     done := Latch
@@ -227,6 +255,8 @@ abstract class PngDriver_ extends AbstractDriver:
       line := buffer_[index..index + line_size]
       if gray:
         line = ByteArray line.size: line[it] ^ 0xff
+      else if several_color:
+        line = ByteArray line.size: min 6 line[it]
       compressor.write line
     compressor.close
 
