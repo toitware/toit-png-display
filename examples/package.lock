@@ -1,22 +1,27 @@
 prefixes:
+  font_clock: toit-font-clock
   pictogrammers_icons: toit-icons-pictogrammers
   pixel_display: toit-pixel-display
   png_display: ..
   roboto: toit-font-google-100dpi-roboto
+  server: server
 packages:
   ..:
     path: ..
     prefixes:
       pixel_display: toit-pixel-display
       server: server
+  toit-pixel-display:
+    path: ../../toit-pixel-display
   server:
     path: ../../toit/system/lib/server
+  toit-font-clock:
+    path: ../../toit-font-clock
   toit-font-google-100dpi-roboto:
     url: github.com/toitware/toit-font-google-100dpi-roboto
     version: 1.1.0
+    hash: 7f34330ed3cfbae1f077f1bd7fa48d4ad484b291
   toit-icons-pictogrammers:
     url: github.com/toitware/toit-icons-pictogrammers
     version: 1.0.0
-  toit-pixel-display:
-    url: github.com/toitware/toit-pixel-display
-    version: 1.2.0
+    hash: 5ac660cc480d5da1fec72e1b24d425ce978419b7

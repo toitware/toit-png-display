@@ -8,6 +8,7 @@ import bytes show Buffer
 import crypto.crc32 show *
 import monitor show Latch
 import pixel_display show *
+import pixel_display
 import server.file show *
 import zlib show *
 
@@ -36,7 +37,7 @@ class GrayScalePngDriver extends PngDriver_:
   constructor width height: super width height
   width_to_byte_width w: return w
 
-abstract class PngDriver_ extends AbstractDriver:
+abstract class PngDriver_ extends pixel_display.AbstractDriver:
   width/int ::= ?
   height/int ::= ?
   rounded_width_/int := 0
