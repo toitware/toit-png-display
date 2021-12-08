@@ -14,7 +14,7 @@ main:
   driver := TrueColorPngDriver 320 240
   display := TrueColorPixelDisplay driver
 
-  context := display.context --landscape --color=(get_rgb 255 128 128) --font=(Font.get "sans10")
+  context := display.context --landscape --color=(get_rgb 0 255 255) --font=(Font.get "sans10")
   blue := context.with --color=(get_rgb 30 40 255)
 
   qoi := QoiTexture 25 25 context.transform QOI_PARROT

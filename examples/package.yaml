@@ -1,6 +1,4 @@
 dependencies:
-  certificate_roots:
-    path: ../../toit-cert-roots/
   font_clock:
     path: ../../toit-font-clock
   pictogrammers_icons:
@@ -13,7 +11,5 @@ dependencies:
   roboto:
     url: github.com/toitware/toit-font-google-100dpi-roboto
     version: ^1.1.0
-  system:
-    path: ../../toit/system
   server:
-    path: ../toit/system/lib/server
+    path: ../../toit/system/lib/server

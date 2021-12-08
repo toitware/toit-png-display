@@ -11,8 +11,6 @@ packages:
     prefixes:
       pixel_display: toit-pixel-display
       server: server
-  toit-pixel-display:
-    path: ../../toit-pixel-display
   server:
     path: ../../toit/system/lib/server
   toit-font-clock:
@@ -25,3 +23,5 @@ packages:
     url: github.com/toitware/toit-icons-pictogrammers
     version: 1.0.0
     hash: 5ac660cc480d5da1fec72e1b24d425ce978419b7
+  toit-pixel-display:
+    path: ../../toit-pixel-display
