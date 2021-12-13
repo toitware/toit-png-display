@@ -84,7 +84,7 @@ main:
   task --background:: weather_task icon_texture temperature_texture
 
   sleep --ms=100
-  driver.write "docs-example.png"
+  driver.write_file "docs-example.png"
 
 weather_task weather_icon/IconTexture temperature_texture/TextTexture:
   while true:

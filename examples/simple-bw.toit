@@ -22,4 +22,4 @@ main:
   display.draw
 
   print "Writing simple-bw.png"
-  driver.write "simple-bw.png"
+  driver.write_file "simple-bw.png"

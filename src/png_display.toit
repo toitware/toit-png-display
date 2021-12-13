@@ -167,26 +167,34 @@ abstract class PngDriver_ extends AbstractDriver:
     length := ByteArray 4
     if name.size != 4: throw "invalid name"
     BIG_ENDIAN.put_uint32 length 0 data.size
-    stream.write length
-    stream.write name
-    stream.write data
+    write_ stream length
+    write_ stream name
+    write_ stream data
     crc := Crc32
     crc.add name
     crc.add data
-    stream.write
+    write_ stream
       byte_swap_
         crc.get
 
-  write filename/string -> none:
+  write_file filename/string -> none:
+    writeable := Stream.for_write filename
+    write_to writeable
+    writeable.close
+
+  static write_ stream byte_array -> none:
+    done := 0
+    while done != byte_array.size:
+      done += stream.write byte_array[done..]
+
+  write_to writeable -> none:
     true_color := flags & FLAG_TRUE_COLOR != 0
     gray := flags & FLAG_4_COLOR != 0
     three_color := flags & FLAG_3_COLOR != 0
     gray_scale := flags & FLAG_GRAY_SCALE != 0
     several_color := flags & FLAG_SEVERAL_COLOR != 0
 
-    stream := Stream.for_write filename
-
-    stream.write HEADER
+    write_ writeable HEADER
 
     bits_per_pixel := ?
     color_type := ?
@@ -218,17 +226,17 @@ abstract class PngDriver_ extends AbstractDriver:
     ]
     BIG_ENDIAN.put_uint32 ihdr 0 width
     BIG_ENDIAN.put_uint32 ihdr 4 height
-    write_chunk stream "IHDR" ihdr
+    write_chunk writeable "IHDR" ihdr
 
     if three_color:
-      write_chunk stream "PLTE" #[  // Palette.
+      write_chunk writeable "PLTE" #[  // Palette.
           0xff, 0xff, 0xff,         // 0 is white.
           0, 0, 0,                  // 1 is black.
           0xff, 0, 0,               // 2 is red.
         ]
     else if several_color:
       // Use color palette of 7-color epaper display.
-      write_chunk stream "PLTE" #[  // Palette.
+      write_chunk writeable "PLTE" #[  // Palette.
           0xff, 0xff, 0xff,         // 0 is white.
           0, 0, 0,                  // 1 is black.
           0xff, 0, 0,               // 2 is red.
@@ -245,6 +253,9 @@ abstract class PngDriver_ extends AbstractDriver:
     task::
       while data := compressor.read:
         compressed.write data
+        if compressed.size > 1900:
+          write_chunk writeable "IDAT" compressed.take  // Flush compressed pixel data.
+          compressed = Buffer
       done.set null
 
     zero_byte := #[0]
@@ -263,11 +274,11 @@ abstract class PngDriver_ extends AbstractDriver:
     // Wait for the reader task to finish.
     done.get
 
-    write_chunk stream "IDAT" compressed.take  // Compressed pixel data.
+    if compressed.size != 0:
+      write_chunk writeable "IDAT" compressed.take  // Compressed pixel data.
 
-    write_chunk stream "IEND" #[]  // End chunk.
+    write_chunk writeable "IEND" #[]  // End chunk.
 
-    stream.close
 
 byte_swap_ ba/ByteArray -> ByteArray:
   result := ba.copy

@@ -29,4 +29,4 @@ main:
   display.text location_context 20 100 "Borås"
   display.draw
 
-  driver.write "weather-gray.png"
+  driver.write_file "weather-gray.png"

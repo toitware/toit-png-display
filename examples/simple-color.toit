@@ -19,4 +19,4 @@ main:
   display.draw
 
   print "Writing simple-color.png"
-  driver.write "simple-color.png"
+  driver.write_file "simple-color.png"
