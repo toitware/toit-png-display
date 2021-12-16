@@ -30,4 +30,4 @@ main:
   display.draw
 
   print "Writing simple-several.png"
-  driver.write "simple-several.png"
+  driver.write_file "simple-several.png"
