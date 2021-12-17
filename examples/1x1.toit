@@ -3,8 +3,11 @@
 // be found in the EXAMPLES_LICENSE file.
 
 import png_display show *
+import pixel_display show *
+import pixel_display.true_color show *
 
 main:
   driver := TrueColorPngDriver 1 1
+  display := TrueColorPixelDisplay driver
   print "Writing out.png"
-  driver.write "1x1.png"
+  write_file "1x2.png" driver display

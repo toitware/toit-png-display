@@ -19,7 +19,6 @@ main:
 
   display.filled_rectangle black 15 15 40 30
   display.text white 20 30 "Toit"
-  display.draw
 
   print "Writing simple-bw.png"
-  driver.write_file "simple-bw.png"
+  write_file "simple-bw.png" driver display

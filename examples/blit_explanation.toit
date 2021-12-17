@@ -82,9 +82,7 @@ diagram filename/string --pixel_stride=1 --extra_code=null:
   if extra_code:
     code.line extra_code
 
-  display.draw
-
-  driver.write_file "$(filename).png"
+  write_file "$(filename).png" driver display
 
 // Used to display the code snippet in the diagram.
 class Code:

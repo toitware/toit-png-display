@@ -11,7 +11,7 @@ import roboto.black_36 as black
 import pictogrammers_icons.size_96 as icons
 
 main:
-  driver := GrayScalePngDriver 320 240
+  driver := GrayScalePngDriver 319 239
   display := GrayScalePixelDisplay driver
   display.background = 30
 
@@ -27,6 +27,5 @@ main:
   display.icon icon_context 200 120 icons.WEATHER_LIGHTNING_RAINY
   display.text time 20 40 "13:37"
   display.text location_context 20 100 "Borås"
-  display.draw
 
-  driver.write_file "weather-gray.png"
+  write_file "weather-gray.png" driver display

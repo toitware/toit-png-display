@@ -12,27 +12,27 @@ import server.file show *
 import zlib show *
 
 class TwoColorPngDriver extends PngDriver_:
-  flags ::= FLAG_2_COLOR | FLAG_PARTIAL_UPDATES
+  flags ::= FLAG_2_COLOR
   constructor width height: super width height
   width_to_byte_width w: return w >> 3
 
 class ThreeColorPngDriver extends PngDriver_:
-  flags ::= FLAG_3_COLOR | FLAG_PARTIAL_UPDATES
+  flags ::= FLAG_3_COLOR
   constructor width height: super width height
   width_to_byte_width w: return w >> 2
 
 class FourGrayPngDriver extends PngDriver_:
-  flags ::= FLAG_4_COLOR | FLAG_PARTIAL_UPDATES
+  flags ::= FLAG_4_COLOR
   constructor width height: super width height
   width_to_byte_width w: return w >> 2
 
 class TrueColorPngDriver extends PngDriver_:
-  flags ::= FLAG_TRUE_COLOR | FLAG_PARTIAL_UPDATES
+  flags ::= FLAG_TRUE_COLOR
   constructor width height: super width height
   width_to_byte_width w: return w * 3
 
 class GrayScalePngDriver extends PngDriver_:
-  flags ::= FLAG_GRAY_SCALE | FLAG_PARTIAL_UPDATES
+  flags ::= FLAG_GRAY_SCALE
   constructor width height: super width height
   width_to_byte_width w: return w
 
@@ -42,51 +42,57 @@ class SeveralColorPngDriver extends PngDriver_:
   width_to_byte_width w: return w
 
 abstract class PngDriver_ extends AbstractDriver:
-  width/int ::= ?
-  height/int ::= ?
-  rounded_width_/int := 0
-  buffer_/ByteArray? := null
-  temp_buffer_/ByteArray := #[]
+  width /int ::= ?
+  height /int ::= ?
+  rounded_width_ /int := 0
+  buffer_ /ByteArray := #[]
+  temp_buffer_ /ByteArray := #[]
   temps_ := List 8
   abstract width_to_byte_width w/int -> int
+
+  // Used while writing:
+  compressor_ /RunLengthZlibEncoder? := null
+  done_ /Latch? := null
+  compressed_ /Buffer? := null
+  writeable_ := null
+  y_ /int := 0
 
   static INVERT_ := ByteArray 0x100: 0xff - it
 
   constructor .width .height:
     w := width
-    h := height
     if flags & (FLAG_TRUE_COLOR | FLAG_GRAY_SCALE | FLAG_SEVERAL_COLOR) == 0:
       w = round_up width 8
-      h = round_up height 8
     rounded_width_ = w
-    buffer_ = ByteArray h * (width_to_byte_width w)
+
+  get_buffer_ left top right bottom -> ByteArray:
+    assert: right >= width
+    assert: left == 0
+    patch_height := bottom - top
+    buffer_size := (width_to_byte_width width) * (bottom - top)
+    if buffer_.size < buffer_size:
+      buffer_ = ByteArray buffer_size
+    return buffer_[..buffer_size]
 
   draw_true_color left/int top/int right/int bottom/int red/ByteArray green/ByteArray blue/ByteArray -> none:
-    bottom = min bottom height
-    patch_width := right - left
+    buffer := get_buffer_ left top right bottom
 
     // Pack 3 pixels in three consecutive bytes.  Since we receive the data in
     // three one-byte-per-pixel buffers we have to shuffle the bytes.
-    index := (left + top * width) * 3
-    blit red   buffer_[index..]     patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
-    blit green buffer_[index + 1..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
-    blit blue  buffer_[index + 2..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+    patch_width := right - left
+    blit red   buffer      patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+    blit green buffer[1..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+    blit blue  buffer[2..] patch_width --destination_pixel_stride=3 --destination_line_stride=width*3
+    patch_height := bottom - top
+    write_buffer_ patch_height buffer
 
   draw_gray_scale left/int top/int right/int bottom/int pixels/ByteArray -> none:
-    patch_width := right - left
-
-    // Copy the smaller rectangle of the pixels into the buffer with the
-    // complete image.
-    index := left + top * width
-    blit pixels buffer_[index..] patch_width --destination_line_stride=width
+    patch_height := bottom - top
+    write_buffer_ patch_height pixels
 
   draw_several_color left/int top/int right/int bottom/int pixels/ByteArray -> none:
-    patch_width := right - left
-
-    // Copy the smaller rectangle of the pixels into the buffer with the
-    // complete image.
-    index := left + top * width
-    blit pixels buffer_[index..] patch_width --destination_line_stride=width
+    patch_height := bottom - top
+    write_buffer_ patch_height pixels
 
   draw_two_color left/int top/int right/int bottom/int pixels/ByteArray -> none:
     if temp_buffer_.size < pixels.size:
@@ -95,8 +101,10 @@ abstract class PngDriver_ extends AbstractDriver:
         temps_[it] = temp_buffer_[it..]
 
     patch_width := right - left
+    assert: patch_width == rounded_width_
     patch_height := bottom - top
-    // Writes the patch to the buffer.  The patch is arranged as height/8
+    assert: patch_height == (round_up patch_height 8)
+    // Writes the patch to the compressor.  The patch is arranged as height/8
     // strips of width bytes, where each byte represents 8 vertically stacked
     // pixels, lsbit at the top.  PNG requires these be transposed so that each
     // line is represented by consecutive bytes, from top to bottom, msbit on
@@ -126,40 +134,45 @@ abstract class PngDriver_ extends AbstractDriver:
     blit pixels_0 temps_[4] 4 --source_line_stride=8 --destination_line_stride=8 --shift=-4 --mask=0xf0 --operation=OR
     blit pixels_4 temps_[0] 4 --source_line_stride=8 --destination_line_stride=8 --shift=4 --mask=0x0f --operation=OR
 
-    output_area := buffer_[(left + top * rounded_width_) >> 3..((right + (bottom - 1) * rounded_width_)) >> 3]
+    buffer := get_buffer_ left top right bottom
 
     // Now we need to spread the 8x8 blocks out over the lines they belong on.
     // First line is bytes 0, 8, 16..., next line is bytes 1, 9, 17... etc.
     8.repeat:
       index := (rounded_width_ * (7 - it)) >> 3
-      blit temps_[it] output_area[index..] (patch_width >> 3) --source_pixel_stride=8 --destination_line_stride=rounded_width_ --lookup_table=INVERT_
+      blit temps_[it] buffer[index..] (patch_width >> 3) --source_pixel_stride=8 --destination_line_stride=rounded_width_ --lookup_table=INVERT_
+    write_buffer_ patch_height buffer
 
   draw_two_bit left/int top/int right/int bottom/int plane_0/ByteArray plane_1/ByteArray -> none:
-    one_bit := plane_1 == null
     patch_width := right - left
+    assert: patch_width == rounded_width_
     patch_height := bottom - top
+    assert: patch_height == (round_up patch_height 8)
 
     byte_width := width_to_byte_width rounded_width_
 
-    // Writes part of the patch to the buffer.  The patch is arranged as
+    buffer := get_buffer_ left top right bottom
+
+    // Writes part of the patch to the compressor.  The patch is arranged as
     // height/8 strips of width bytes, where each byte represents 8 vertically
     // stacked pixels.  PNG requires these be transposed so that each
     // line is represented by consecutive bytes, from top to bottom, msbit on
     // the left.
-    byte_x := width_to_byte_width left
+    // This implementation is not as optimized as the two-color version.
     row := 0
     ppb := 4  // Pixels per byte.
     for y := 0; y < patch_height; y += 8:
       for in_bit := 0; in_bit < 8 and y + top + in_bit < height; in_bit++:
-        out_index := (y + in_bit + top) * byte_width + byte_x
+        out_index := (y + in_bit) * byte_width
         for x := 0; x < patch_width; x += ppb:
           out := 0
           byte_pos := row + x + ppb - 1
           for out_bit := ppb - 1; out_bit >= 0; out_bit--:
             out |= ((plane_0[byte_pos - out_bit] >> in_bit) & 1) << (out_bit * 2)
             out |= ((plane_1[byte_pos - out_bit] >> in_bit) & 1) << (out_bit * 2 + 1)
-          buffer_[out_index + (width_to_byte_width x)] = out
+          buffer[out_index + (width_to_byte_width x)] = out
       row += rounded_width_
+    write_buffer_ patch_height buffer
 
   static HEADER ::= #[0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n']
 
@@ -177,17 +190,12 @@ abstract class PngDriver_ extends AbstractDriver:
       byte_swap_
         crc.get
 
-  write_file filename/string -> none:
-    writeable := Stream.for_write filename
-    write_to writeable
-    writeable.close
-
   static write_ stream byte_array -> none:
     done := 0
     while done != byte_array.size:
       done += stream.write byte_array[done..]
 
-  write_to writeable -> none:
+  write_header_ writeable -> none:
     true_color := flags & FLAG_TRUE_COLOR != 0
     gray := flags & FLAG_4_COLOR != 0
     three_color := flags & FLAG_3_COLOR != 0
@@ -246,41 +254,77 @@ abstract class PngDriver_ extends AbstractDriver:
           0xff, 0xc0, 0,            // 6 is orange
         ]
 
-    compressor := RunLengthZlibEncoder
-    done := Latch
-    compressed := Buffer
+    compressor_ = RunLengthZlibEncoder
+    done_ = Latch
+    compressed_ = Buffer
+    writeable_ = writeable
+    y_ = 0
 
     task::
-      while data := compressor.read:
-        compressed.write data
-        if compressed.size > 1900:
-          write_chunk writeable "IDAT" compressed.take  // Flush compressed pixel data.
-          compressed = Buffer
-      done.set null
+      while data := compressor_.read:
+        compressed_.write data
+        if compressed_.size > 1900:
+          write_chunk writeable_ "IDAT" compressed_.take  // Flush compressed pixel data.
+          compressed_ = Buffer
+      done_.set null
 
+  write_buffer_ height/int buffer/ByteArray -> none:
     zero_byte := #[0]
+    gray := flags & FLAG_4_COLOR != 0
+    several_color := flags & FLAG_SEVERAL_COLOR != 0
     height.repeat: | y |
-      compressor.write zero_byte  // Adaptive scheme.
+      if y_ >= this.height: return
+      compressor_.write zero_byte  // Adaptive scheme.
       line_size := width_to_byte_width width
       index := y * line_size
-      line := buffer_[index..index + line_size]
+      line := buffer[index..index + line_size]
       if gray:
         line = ByteArray line.size: line[it] ^ 0xff
       else if several_color:
         line = ByteArray line.size: min 6 line[it]
-      compressor.write line
-    compressor.close
+      compressor_.write line
+      y_++
+
+  write_footer_:
+    compressor_.close
 
     // Wait for the reader task to finish.
-    done.get
+    done_.get
 
-    if compressed.size != 0:
-      write_chunk writeable "IDAT" compressed.take  // Compressed pixel data.
+    if compressed_.size != 0:
+      write_chunk writeable_ "IDAT" compressed_.take  // Compressed pixel data.
 
-    write_chunk writeable "IEND" #[]  // End chunk.
+    compressed_ = null
+    compressor_ = null
+    done_ = null
+    y_ = 0
 
+    write_chunk writeable_ "IEND" #[]  // End chunk.
 
 byte_swap_ ba/ByteArray -> ByteArray:
   result := ba.copy
   byte_swap_32 result
   return result
+
+/**
+Writes a PNG file to the given filename.
+Only light compression is used, basically just run-length encoding
+  of equal pixels.  This is fast and reduces memory use.
+*/
+write_file filename/string driver/PngDriver_ display/PixelDisplay:
+  write_to
+      Stream.for_write filename
+      driver
+      display
+
+/**
+Writes a PNG file to an object with a write method.
+Can be used to write a PNG to an HTTP socket.
+Only light compression is used, basically just run-length encoding
+  of equal pixels.  This is fast and reduces memory use.
+*/
+write_to writeable driver/PngDriver_ display/PixelDisplay:
+  driver.write_header_ writeable
+  display.draw
+  driver.write_footer_
+  writeable.close

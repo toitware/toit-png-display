@@ -19,7 +19,6 @@ main:
   display.text context 5 30 "Toit"
   display.text light_gray 35 20 "Light gray"
   display.text dark_gray 35 40 "Dark gray"
-  display.draw
 
   print "Writing simple-gray.png"
-  driver.write_file "simple-gray.png"
+  write_file "simple-gray.png" driver display
