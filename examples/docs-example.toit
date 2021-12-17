@@ -84,7 +84,7 @@ main:
   task --background:: weather_task icon_texture temperature_texture
 
   sleep --ms=100
-  driver.write_file "docs-example.png"
+  write_file "docs-example.png" driver display
 
 weather_task weather_icon/IconTexture temperature_texture/TextTexture:
   while true:
@@ -97,7 +97,6 @@ weather_task weather_icon/IconTexture temperature_texture/TextTexture:
     display_mutex.do:
       weather_icon.icon = WMO_4501_ICONS[code]
       temperature_texture.text = "$(%.1f temp)°C"
-      display.draw
     sleep --ms=1000
 
 clock_task time_texture:
@@ -106,7 +105,6 @@ clock_task time_texture:
     display_mutex.do:
       // H:MM or HH:MM depending on time of day.
       time_texture.text = "$now.h:$(%02d now.m)"
-      display.draw
     // Sleep this task until the next whole minute.
     sleep_time := 60 - now.s
     sleep --ms=sleep_time*1000

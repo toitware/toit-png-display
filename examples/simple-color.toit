@@ -16,7 +16,6 @@ main:
 
   display.text context 20 30 "Toit"
   display.text blue 50 30 "50%"
-  display.draw
 
   print "Writing simple-color.png"
-  driver.write_file "simple-color.png"
+  write_file "simple-color.png" driver display

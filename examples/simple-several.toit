@@ -27,7 +27,6 @@ main:
   display.text context 5 30 "Toit"
   display.text orange 35 20 "Orange"
   display.text blue 35 40 "Blue"
-  display.draw
 
   print "Writing simple-several.png"
-  driver.write_file "simple-several.png"
+  write_file "simple-several.png" driver display
