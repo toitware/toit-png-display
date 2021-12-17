@@ -6,6 +6,8 @@ import png_display show *
 import pixel_display show *
 import pixel_display.true_color show *
 
+import .write_file
+
 main:
   driver := TrueColorPngDriver 1 1
   display := TrueColorPixelDisplay driver

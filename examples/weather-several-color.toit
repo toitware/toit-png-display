@@ -10,6 +10,8 @@ import roboto.bold_36 as bold
 import roboto.black_36 as black
 import pictogrammers_icons.size_96 as icons
 
+import .write_file
+
 WHITE ::= 0
 BLACK ::= 1
 RED ::= 2

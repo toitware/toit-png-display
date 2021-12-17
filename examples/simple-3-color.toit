@@ -7,6 +7,8 @@ import pixel_display show *
 import pixel_display.three_color show WHITE BLACK RED
 import font show *
 
+import .write_file
+
 main:
   driver := ThreeColorPngDriver 104 50
   display := ThreeColorPixelDisplay driver

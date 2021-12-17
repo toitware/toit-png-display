@@ -8,7 +8,6 @@ import bytes show Buffer
 import crypto.crc32 show *
 import monitor show Latch
 import pixel_display show *
-import server.file show *
 import zlib show *
 
 class TwoColorPngDriver extends PngDriver_:
@@ -305,17 +304,6 @@ byte_swap_ ba/ByteArray -> ByteArray:
   result := ba.copy
   byte_swap_32 result
   return result
-
-/**
-Writes a PNG file to the given filename.
-Only light compression is used, basically just run-length encoding
-  of equal pixels.  This is fast and reduces memory use.
-*/
-write_file filename/string driver/PngDriver_ display/PixelDisplay:
-  write_to
-      Stream.for_write filename
-      driver
-      display
 
 /**
 Writes a PNG file to an object with a write method.
