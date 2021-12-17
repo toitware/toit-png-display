@@ -7,6 +7,8 @@ import pixel_display show *
 import pixel_display.four_gray show WHITE BLACK LIGHT_GRAY DARK_GRAY
 import font show *
 
+import .write_file
+
 main:
   driver := FourGrayPngDriver 104 50
   display := FourGrayPixelDisplay driver

@@ -10,6 +10,8 @@ import roboto.bold_36 as bold
 import roboto.black_36 as black
 import pictogrammers_icons.size_96 as icons
 
+import .write_file
+
 main:
   driver := TrueColorPngDriver 320 240
   display := TrueColorPixelDisplay driver

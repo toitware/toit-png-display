@@ -8,6 +8,8 @@ import pixel_display.texture show TEXT_TEXTURE_ALIGN_RIGHT TEXT_TEXTURE_ALIGN_LE
 import font.x11_100dpi.sans.sans_24_bold
 import font.x11_100dpi.typewriter.typewriter_14_bold
 
+import .write_file
+
 // Generates the diagrams used on https://docs.toit.io/language/sdk/blit
 
 // PNG size generated.

@@ -17,6 +17,8 @@ import pixel_display show TwoColorPixelDisplay
 
 import png_display show *
 
+import .write_file
+
 // Search for icon names on https://materialdesignicons.com/
 // (hover over icons to get names).
 WMO_4501_ICONS ::= [

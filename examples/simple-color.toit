@@ -7,6 +7,8 @@ import pixel_display show *
 import pixel_display.true_color show *
 import font show *
 
+import .write_file
+
 main:
   driver := TrueColorPngDriver 104 50
   display := TrueColorPixelDisplay driver

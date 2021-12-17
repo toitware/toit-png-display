@@ -7,6 +7,8 @@ import pixel_display show *
 import pixel_display.two_color show WHITE BLACK
 import font show *
 
+import .write_file
+
 main:
   driver := TwoColorPngDriver 104 50
   display := TwoColorPixelDisplay driver

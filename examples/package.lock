@@ -3,12 +3,12 @@ prefixes:
   pixel_display: toit-pixel-display
   png_display: ..
   roboto: toit-font-google-100dpi-roboto
+  server: host
 packages:
   ..:
     path: ..
     prefixes:
       pixel_display: toit-pixel-display
-      server: host
   host:
     path: ../../toit/system/lib/host
   toit-font-google-100dpi-roboto:
