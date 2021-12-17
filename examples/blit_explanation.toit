@@ -1,3 +1,7 @@
+// Copyright (C) 2021 Toitware ApS.
+// Use of this source code is governed by a Zero-Clause BSD license that can
+// be found in the EXAMPLES_LICENSE file.
+
 import bitmap show blit bytemap_draw_text ORIENTATION_0
 import font show *
 import pixel_display show *
