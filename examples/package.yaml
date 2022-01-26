@@ -1,0 +1,15 @@
+dependencies:
+  pictogrammers_icons:
+    url: github.com/toitware/toit-icons-pictogrammers
+    version: ^1.0.0
+  pixel_display:
+    url: github.com/toitware/toit-pixel-display
+    version: ^1.4.0
+  png_display:
+    path: ..
+  roboto:
+    url: github.com/toitware/toit-font-google-100dpi-roboto
+    version: ^1.1.0
+  server:
+    url: github.com/toitlang/pkg-host
+    version: ^1.0.0

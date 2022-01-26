@@ -175,7 +175,7 @@ abstract class PngDriver_ extends AbstractDriver:
 
   static HEADER ::= #[0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n']
 
-  static write_chunk stream name/String data/ByteArray -> none:
+  static write_chunk stream name/string data/ByteArray -> none:
     length := ByteArray 4
     if name.size != 4: throw "invalid name"
     BIG_ENDIAN.put_uint32 length 0 data.size
@@ -263,7 +263,7 @@ abstract class PngDriver_ extends AbstractDriver:
       while data := compressor_.read:
         compressed_.write data
         if compressed_.size > 1900:
-          write_chunk writeable_ "IDAT" compressed_.take  // Flush compressed pixel data.
+          write_chunk writeable_ "IDAT" compressed_.bytes  // Flush compressed pixel data.
           compressed_ = Buffer
       done_.set null
 
@@ -291,7 +291,7 @@ abstract class PngDriver_ extends AbstractDriver:
     done_.get
 
     if compressed_.size != 0:
-      write_chunk writeable_ "IDAT" compressed_.take  // Compressed pixel data.
+      write_chunk writeable_ "IDAT" compressed_.bytes  // Compressed pixel data.
 
     compressed_ = null
     compressor_ = null
