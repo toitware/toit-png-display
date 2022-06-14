@@ -1,4 +1,7 @@
 dependencies:
+  host:
+    url: github.com/toitlang/pkg-host
+    version: ^1.4.1
   pictogrammers_icons:
     url: github.com/toitware/toit-icons-pictogrammers
     version: ^1.0.0
