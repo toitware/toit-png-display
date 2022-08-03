@@ -1,4 +1,5 @@
 prefixes:
+  font_x11_adobe: pkg-font-x11-adobe
   host: pkg-host
   pictogrammers_icons: toit-icons-pictogrammers
   pixel_display: toit-pixel-display
@@ -10,6 +11,10 @@ packages:
     path: ..
     prefixes:
       pixel_display: toit-pixel-display
+  pkg-font-x11-adobe:
+    url: github.com/toitlang/pkg-font-x11-adobe
+    version: 0.1.0
+    hash: f844400722165252148f087cdf189abab0a47f3d
   pkg-host:
     url: github.com/toitlang/pkg-host
     version: 1.5.1
