@@ -1,4 +1,4 @@
-# toit-png-display
+# PNG Display
 
 A pseudo-pixel-display that writes PNG files.
 
