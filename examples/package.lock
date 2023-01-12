@@ -1,3 +1,4 @@
+sdk: ^1.6.10
 prefixes:
   font_x11_adobe: pkg-font-x11-adobe
   host: pkg-host
