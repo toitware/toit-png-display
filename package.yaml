@@ -1,4 +1,5 @@
+name: png_display
 dependencies:
   pixel_display:
     url: github.com/toitware/toit-pixel-display
-    version: ^1.5.0
+    version: ^1.6.0

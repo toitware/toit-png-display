@@ -6,7 +6,7 @@
 
 import encoding.json
 import font show *
-import font.x11_100dpi.sans.sans_14_bold
+import font_x11_adobe.sans_14_bold
 import monitor show Mutex
 
 import pictogrammers_icons.size_48 as icons

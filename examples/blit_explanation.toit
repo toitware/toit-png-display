@@ -9,8 +9,8 @@ import pixel_display.true_color show *
 import png_display show *
 import pixel_display.texture show TEXT_TEXTURE_ALIGN_RIGHT TEXT_TEXTURE_ALIGN_LEFT TEXT_TEXTURE_ALIGN_CENTER
 
-import font.x11_100dpi.sans.sans_24_bold
-import font.x11_100dpi.typewriter.typewriter_14_bold
+import font_x11_adobe.sans_24_bold
+import font_x11_adobe.typewriter_14_bold
 
 import .write_file
 
