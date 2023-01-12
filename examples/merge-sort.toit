@@ -118,7 +118,7 @@ class Cursor:
 
   move_to x y:
     this.x = TOP_BUFFER_X + x * SPACING - padding
-    this.y = y + padding 
+    this.y = y + padding
     update_position_
 
   update_position_:
@@ -176,7 +176,7 @@ class Visualization:
 
   constructor .driver .display .filename:
     context := display.context --landscape --alignment=TEXT_TEXTURE_ALIGN_CENTER --color=(get_rgb 0 0 0) --font=FONT
-    
+
     text_context = context
     rect_context := context.with --color=(get_rgb 180 120 120)
     edge_context := context.with --color=(get_rgb 20 20 20)
@@ -251,9 +251,7 @@ class Visualization:
         mover := pick_left ? array[x++] : array[x2++]
         mover.move_goal new_x to_y
         dest_array.add mover
-        10.repeat:
-          array.do: it.slide
-          write
+        slide_steps --steps=10
 
     array.replace 0 dest_array
     cursor1.hide
@@ -334,11 +332,18 @@ class Visualization:
           mover = dest_array[x2++]
         mover.move_goal idx from_y
         array[idx++] = mover
+        slide_steps --steps=2
 
       cursor1.hide
       cursor2.hide
       complete
       group1.hide
+      write
+
+  slide_steps list/List=array --steps=10 -> none:
+    while steps > 0 and (list.any: it and not it.arrived):
+      list.do: if it: it.slide
+      steps--
       write
 
   complete list/List=array -> none:
