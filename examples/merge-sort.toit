@@ -71,7 +71,6 @@ class Element:
   constructor display rect_context edge_context .x .y .width .height:
     x_goal = x
     y_goal = y
-    //hue := ((height - 20) * 2.5).to_int
     hue := height + 120
     context := rect_context.with --color=(hsl_to_rgb_ hue 80 50)
     rectangle = display.filled_rectangle      context 0 0 width height
