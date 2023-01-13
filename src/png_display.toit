@@ -5,7 +5,7 @@
 import binary show BIG_ENDIAN byte_swap_32
 import bitmap show *
 import bytes show Buffer
-import crypto.crc32 show *
+import crypto.crc show *
 import monitor show Latch
 import pixel_display show *
 import zlib show *
