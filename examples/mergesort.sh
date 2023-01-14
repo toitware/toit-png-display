@@ -27,4 +27,11 @@ convert -delay 4 -loop 0 merge*.png merge.gif &
 convert -delay 4 -loop 0 half*.png half.gif &
 convert -delay 4 -loop 0 quarter*.png quarter.gif &
 
-wait  # Wait for gifs to be written
+wait  # Wait for gifs to be written.
+
+gifsicle -O quarter.gif -o quarter-optimized.gif &
+gifsicle -O half.gif -o half-optimized.gif &
+gifsicle -O merge.gif -o merge-optimized.gif &
+
+wait  # Wait for gifs to be optimized.
+

@@ -47,10 +47,33 @@ class Element:
 
   speed := 100.0
 
+  static hsl_to_rgb_ h/int s/int l/int -> int:
+    sf := s.to_float / 100.0
+    lf := l.to_float / 100.0
+
+    a := sf * (min lf (1 - lf))
+    f := (: | n |
+      k := (n + h / 30.0) % 12
+      max1 :=
+          max
+              -1
+              min
+                  k - 3
+                  min (9 - k) 1
+      lf - a * max1
+    )
+    r := (255.0 * (f.call 0)).to_int
+    g := (255.0 * (f.call 8)).to_int
+    b := (255.0 * (f.call 4)).to_int
+    [r, g, b].do: assert: 0 <= it <= 255
+    return (r << 16) + (g << 8) + b
+
   constructor display rect_context edge_context .x .y .width .height:
     x_goal = x
     y_goal = y
-    rectangle = display.filled_rectangle rect_context 0 0 width height
+    hue := height + 120
+    context := rect_context.with --color=(hsl_to_rgb_ hue 80 50)
+    rectangle = display.filled_rectangle      context 0 0 width height
     left      = display.filled_rectangle edge_context 0 0 1 height
     right     = display.filled_rectangle edge_context 0 0 1 height
     top       = display.filled_rectangle edge_context 0 0 width + 1 1
@@ -271,7 +294,8 @@ class Visualization:
     half_sort 0 4 4 TOP_BUFFER_Y BOTTOM_BUFFER_Y
     half_sort 0 8 8 TOP_BUFFER_Y BOTTOM_BUFFER_Y
     half_sort 0 16 16 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    20.repeat: write
+    buffer.hide
+    100.repeat: write
 
   quarter:
     //display.text text_context WIDTH/2 LABEL_Y "Merge sort with ¼-sized buffer"
@@ -284,7 +308,8 @@ class Visualization:
     half_sort 16 8 8 TOP_BUFFER_Y BOTTOM_BUFFER_Y
     half_sort 8 8 16 TOP_BUFFER_Y BOTTOM_BUFFER_Y
     half_sort 0 8 24 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    20.repeat: write
+    buffer.hide
+    100.repeat: write
 
   half_sort start/int size1/int size2/int from_y/int to_y/int:
     print "half: Sort $size1/$size2 image $ctr"
