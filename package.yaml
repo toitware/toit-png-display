@@ -1,6 +1,6 @@
 name: png_display
 environment:
-  sdk: ^2.0.0-alpha.37
+  sdk: ^2.0.0-alpha.92
 dependencies:
   pixel_display:
     url: github.com/toitware/toit-pixel-display
