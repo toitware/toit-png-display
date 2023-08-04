@@ -260,7 +260,7 @@ abstract class PngDriver_ extends AbstractDriver:
     y_ = 0
 
     task::
-      while data := compressor_.read:
+      while data := compressor_.reader.read:
         compressed_.write data
         if compressed_.size > 1900:
           write_chunk writeable_ "IDAT" compressed_.bytes  // Flush compressed pixel data.
