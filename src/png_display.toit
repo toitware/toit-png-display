@@ -194,7 +194,7 @@ abstract class PngDriver_ extends AbstractDriver:
     while done != byte_array.size:
       done += stream.write byte_array[done..]
 
-  write_header_ writeable -> none:
+  write_header_ writeable --reproducible/bool -> none:
     true_color := flags & FLAG_TRUE_COLOR != 0
     gray := flags & FLAG_4_COLOR != 0
     three_color := flags & FLAG_3_COLOR != 0
@@ -262,7 +262,7 @@ abstract class PngDriver_ extends AbstractDriver:
     task::
       while data := compressor_.reader.read:
         compressed_.write data
-        if compressed_.size > 1900:
+        if (not reproducible) and compressed_.size > 1900:
           write_chunk writeable_ "IDAT" compressed_.bytes  // Flush compressed pixel data.
           compressed_ = Buffer
       done_.set null
@@ -310,9 +310,15 @@ Writes a PNG file to an object with a write method.
 Can be used to write a PNG to an HTTP socket.
 Only light compression is used, basically just run-length encoding
   of equal pixels.  This is fast and reduces memory use.
+If $reproducible is true the whole PNG is buffered up before writing.
+  This uses more memory, but ensures that the whole image is in one IDAT chunk,
+  which makes it easier to compare output files.
+If $reproducible is false the PNG is written incrementally, which
+  uses less memory, but the image is split into several IDAT chunks, which
+  makes it harder to compare output files.
 */
-write_to writeable driver/PngDriver_ display/PixelDisplay:
-  driver.write_header_ writeable
+write_to writeable --reproducible/bool=false driver/PngDriver_ display/PixelDisplay:
+  driver.write_header_ writeable --reproducible=reproducible
   display.draw
   driver.write_footer_
   writeable.close

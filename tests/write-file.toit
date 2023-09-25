@@ -14,8 +14,10 @@ write_file filename/string driver/PngDriver_ display/PixelDisplay:
         pipe.stdout
         driver
         display
+        --reproducible
   else:
     write_to
         Stream.for_write filename
         driver
         display
+        --reproducible
