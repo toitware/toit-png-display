@@ -9,7 +9,7 @@ import font show *
 
 import .write_file
 
-main:
+main args:
   driver := FourGrayPngDriver 104 50
   display := FourGrayPixelDisplay driver
   display.background = WHITE
@@ -22,5 +22,7 @@ main:
   display.text light_gray 35 20 "Light gray"
   display.text dark_gray 35 40 "Dark gray"
 
-  print "Writing simple-gray.png"
-  write_file "simple-gray.png" driver display
+  filename := args.size == 0 ? "-" : args[0]
+
+  print "Writing $filename"
+  write_file filename driver display

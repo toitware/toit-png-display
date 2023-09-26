@@ -9,7 +9,7 @@ import font show *
 
 import .write_file
 
-main:
+main args:
   driver := TrueColorPngDriver 104 50
   display := TrueColorPixelDisplay driver
 
@@ -19,5 +19,7 @@ main:
   display.text context 20 30 "Toit"
   display.text blue 50 30 "50%"
 
-  print "Writing simple-color.png"
-  write_file "simple-color.png" driver display
+  filename := args.size == 0 ? "-" : args[0]
+
+  print "Writing $filename"
+  write_file filename driver display

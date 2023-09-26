@@ -20,7 +20,7 @@ BLUE ::= 4
 YELLOW ::= 5
 ORANGE ::= 6
 
-main:
+main args:
   driver := SeveralColorPngDriver 319 239
   display := SeveralColorPixelDisplay driver
   display.background = BLACK
@@ -38,4 +38,7 @@ main:
   display.text time 20 40 "13:37"
   display.text location_context 20 100 "Borås"
 
-  write_file "weather-several-color.png" driver display
+  filename := args.size == 0 ? "-" : args[0]
+
+  print "Writing $filename"
+  write_file filename driver display

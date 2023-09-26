@@ -17,7 +17,7 @@ BLUE ::= 4
 YELLOW ::= 5
 ORANGE ::= 6
 
-main:
+main args:
   driver := SeveralColorPngDriver 104 50
   display := SeveralColorPixelDisplay driver
   display.background = WHITE
@@ -30,5 +30,7 @@ main:
   display.text orange 35 20 "Orange"
   display.text blue 35 40 "Blue"
 
-  print "Writing simple-several.png"
-  write_file "simple-several.png" driver display
+  filename := args.size == 0 ? "-" : args[0]
+
+  print "Writing $filename"
+  write_file filename driver display

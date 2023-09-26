@@ -9,7 +9,7 @@ import font show *
 
 import .write_file
 
-main:
+main args:
   driver := ThreeColorPngDriver 104 50
   display := ThreeColorPixelDisplay driver
   display.background = WHITE
@@ -20,5 +20,7 @@ main:
   display.text context 20 30 "Toit"
   display.text red 60 30 "Red"
 
-  print "Writing simple-3-color.png"
-  write_file "simple-3-color.png" driver display
+  filename := args.size == 0 ? "-" : args[0]
+
+  print "Writing $filename"
+  write_file filename driver display

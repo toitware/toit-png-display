@@ -9,7 +9,7 @@ import font show *
 
 import .write_file
 
-main:
+main args:
   driver := TwoColorPngDriver 104 50
   display := TwoColorPixelDisplay driver
   display.background = WHITE
@@ -22,5 +22,7 @@ main:
   display.filled_rectangle black 15 15 40 30
   display.text white 20 30 "Toit"
 
-  print "Writing simple-bw.png"
-  write_file "simple-bw.png" driver display
+  filename := args.size == 0 ? "-" : args[0]
+
+  print "Writing $filename"
+  write_file filename driver display
