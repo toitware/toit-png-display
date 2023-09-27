@@ -91,11 +91,11 @@ main:
 weather-task weather-icon/IconTexture temperature-texture/TextTexture:
   while true:
     map := json.parse """
-      {"wmo_4501": $(random 8),
-       "temperature_c": 24.1,
-       "temperature_f": 75.4}"""
-    code := map["wmo_4501"]
-    temp := map["temperature_c"]
+      {"wmo-4501": $(random 8),
+       "temperature-c": 24.1,
+       "temperature-f": 75.4}"""
+    code := map["wmo-4501"]
+    temp := map["temperature-c"]
     display-mutex.do:
       weather-icon.icon = WMO-4501-ICONS[code]
       temperature-texture.text = "$(%.1f temp)°C"

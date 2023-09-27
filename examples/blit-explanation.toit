@@ -40,7 +40,7 @@ CODE-FONT := Font [typewriter-14-bold.ASCII]
 
 main:
   diagram "blit"
-  diagram "blit-stride" --pixel-stride=2 --extra-code="  --destination_pixel_stride=2"
+  diagram "blit-stride" --pixel-stride=2 --extra-code="  --destination-pixel-stride=2"
 
 // Generates a PNG file showing how blit works.
 diagram filename/string --pixel-stride=1 --extra-code=null:
@@ -77,14 +77,14 @@ diagram filename/string --pixel-stride=1 --extra-code=null:
   code.line "H := 9"
   code.line "SLS := 30  // source line stride."
   code.line "DLS := 20  // dest line stride."
-  code.line "slice_start := X + Y * SLS"
-  code.line "slice_end := X + W + (Y + H) * SLS"
+  code.line "slice-start := X + Y * SLS"
+  code.line "slice-end := X + W + (Y + H) * SLS"
   code.line "blit"
-  code.line "  source[slice_start..slice_end]"
+  code.line "  source[slice-start..slice-end]"
   code.line "  dest"
   code.line "  W"
-  code.line "  --source_line_stride=SLS"
-  code.line "  --destination_line_stride=DLS"
+  code.line "  --source-line-stride=SLS"
+  code.line "  --destination-line-stride=DLS"
   if extra-code:
     code.line extra-code
 
@@ -215,7 +215,7 @@ grid display label-context name lc-name X Y W H:
   display.text label-context
     X + W * BYTE-SIZE/2
     stride-y + 25
-    "--$(lc-name)_line_stride=$W"
+    "--$(lc-name)_line-stride=$W"
 
   R := X + W * BYTE-SIZE + 1
 
