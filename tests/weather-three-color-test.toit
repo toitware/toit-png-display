@@ -3,34 +3,34 @@
 // be found in the EXAMPLES_LICENSE file.
 
 import font show *
-import png_display show *
-import pixel_display show *
-import pixel_display.three_color show *
-import roboto.bold_36 as bold
-import roboto.black_36 as black
-import pictogrammers_icons.size_96 as icons
+import png-display show *
+import pixel-display show *
+import pixel-display.three-color show *
+import roboto.bold-36 as bold
+import roboto.black-36 as black
+import pictogrammers-icons.size-96 as icons
 
-import .write_file
+import .write-file
 
 main args:
   driver := ThreeColorPngDriver 320 239
   display := ThreeColorPixelDisplay driver
   display.background = WHITE
 
-  font := Font [bold.ASCII, bold.LATIN_1_SUPPLEMENT]
-  time_font := Font [black.ASCII]
+  font := Font [bold.ASCII, bold.LATIN-1-SUPPLEMENT]
+  time-font := Font [black.ASCII]
 
   context := display.context --landscape --color=RED --font=font
-  icon_context := context.with --color=BLACK
-  time := context.with --color=BLACK --font=time_font
-  location_context := context.with --color=RED
+  icon-context := context.with --color=BLACK
+  time := context.with --color=BLACK --font=time-font
+  location-context := context.with --color=RED
 
   display.text context 20 200 "Rain with thunder"
-  display.icon icon_context 200 120 icons.WEATHER_LIGHTNING_RAINY
+  display.icon icon-context 200 120 icons.WEATHER-LIGHTNING-RAINY
   display.text time 20 40 "13:37"
-  display.text location_context 20 100 "Borås"
+  display.text location-context 20 100 "Borås"
 
   filename := args.size == 0 ? "-" : args[0]
 
   print "Writing $filename"
-  write_file filename driver display
+  write-file filename driver display

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
-import png_display show *
-import pixel_display show *
-import pixel_display.four_gray show WHITE BLACK LIGHT_GRAY DARK_GRAY
+import png-display show *
+import pixel-display show *
+import pixel-display.four-gray show WHITE BLACK LIGHT-GRAY DARK-GRAY
 import font show *
 
-import .write_file
+import .write-file
 
 main args:
   driver := FourGrayPngDriver 104 50
@@ -15,14 +15,14 @@ main args:
   display.background = WHITE
 
   context := display.context --landscape --color=BLACK --font=(Font.get "sans10")
-  light_gray := context.with --color=LIGHT_GRAY
-  dark_gray := context.with --color=DARK_GRAY
+  light-gray := context.with --color=LIGHT-GRAY
+  dark-gray := context.with --color=DARK-GRAY
 
   display.text context 5 30 "Toit"
-  display.text light_gray 35 20 "Light gray"
-  display.text dark_gray 35 40 "Dark gray"
+  display.text light-gray 35 20 "Light gray"
+  display.text dark-gray 35 40 "Dark gray"
 
   filename := args.size == 0 ? "-" : args[0]
 
   print "Writing $filename"
-  write_file filename driver display
+  write-file filename driver display

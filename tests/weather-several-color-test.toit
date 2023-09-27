@@ -3,14 +3,14 @@
 // be found in the EXAMPLES_LICENSE file.
 
 import font show *
-import png_display show *
-import pixel_display show *
-import pixel_display.several_color show *
-import roboto.bold_36 as bold
-import roboto.black_36 as black
-import pictogrammers_icons.size_96 as icons
+import png-display show *
+import pixel-display show *
+import pixel-display.several-color show *
+import roboto.bold-36 as bold
+import roboto.black-36 as black
+import pictogrammers-icons.size-96 as icons
 
-import .write_file
+import .write-file
 
 WHITE ::= 0
 BLACK ::= 1
@@ -25,20 +25,20 @@ main args:
   display := SeveralColorPixelDisplay driver
   display.background = BLACK
 
-  font := Font [bold.ASCII, bold.LATIN_1_SUPPLEMENT]
-  time_font := Font [black.ASCII]
+  font := Font [bold.ASCII, bold.LATIN-1-SUPPLEMENT]
+  time-font := Font [black.ASCII]
 
   context := display.context --landscape --color=ORANGE --font=font
-  icon_context := context.with --color=WHITE
-  time := context.with --color=GREEN --font=time_font
-  location_context := context.with --color=YELLOW
+  icon-context := context.with --color=WHITE
+  time := context.with --color=GREEN --font=time-font
+  location-context := context.with --color=YELLOW
 
   display.text context 20 200 "Rain with thunder"
-  display.icon icon_context 200 120 icons.WEATHER_LIGHTNING_RAINY
+  display.icon icon-context 200 120 icons.WEATHER-LIGHTNING-RAINY
   display.text time 20 40 "13:37"
-  display.text location_context 20 100 "Borås"
+  display.text location-context 20 100 "Borås"
 
   filename := args.size == 0 ? "-" : args[0]
 
   print "Writing $filename"
-  write_file filename driver display
+  write-file filename driver display
