@@ -2,12 +2,12 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
-import png_display show *
-import pixel_display show *
-import pixel_display.several_color
+import png-display show *
+import pixel-display show *
+import pixel-display.several-color
 import font show *
 
-import .write_file
+import .write-file
 
 WHITE ::= 0
 BLACK ::= 1
@@ -33,4 +33,4 @@ main args:
   filename := args.size == 0 ? "-" : args[0]
 
   print "Writing $filename"
-  write_file filename driver display
+  write-file filename driver display

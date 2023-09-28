@@ -2,12 +2,12 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
-import png_display show *
-import pixel_display show *
-import pixel_display.three_color show WHITE BLACK RED
+import png-display show *
+import pixel-display show *
+import pixel-display.three-color show WHITE BLACK RED
 import font show *
 
-import .write_file
+import .write-file
 
 main args:
   driver := ThreeColorPngDriver 104 50
@@ -23,4 +23,4 @@ main args:
   filename := args.size == 0 ? "-" : args[0]
 
   print "Writing $filename"
-  write_file filename driver display
+  write-file filename driver display

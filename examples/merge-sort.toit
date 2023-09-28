@@ -1,37 +1,37 @@
-import bitmap show blit bytemap_draw_text ORIENTATION_0
+import bitmap show blit bytemap-draw-text ORIENTATION-0
 import font show *
 import math
-import pixel_display show *
-import pixel_display.true_color show *
-import png_display show *
-import pixel_display.texture show TEXT_TEXTURE_ALIGN_RIGHT TEXT_TEXTURE_ALIGN_LEFT TEXT_TEXTURE_ALIGN_CENTER
+import pixel-display show *
+import pixel-display.true-color show *
+import png-display show *
+import pixel-display.texture show TEXT-TEXTURE-ALIGN-RIGHT TEXT-TEXTURE-ALIGN-LEFT TEXT-TEXTURE-ALIGN-CENTER
 
-import font_x11_adobe.sans_24_bold
+import font-x11-adobe.sans-24-bold
 
-import .write_file
+import .write-file
 
-FONT ::= Font [sans_24_bold.ASCII, sans_24_bold.LATIN_1_SUPPLEMENT]
+FONT ::= Font [sans-24-bold.ASCII, sans-24-bold.LATIN-1-SUPPLEMENT]
 
 // PNG size generated.
 WIDTH ::= 512
 HEIGHT ::= 400
 
-BACKGROUND ::= get_rgb 255 255 255
+BACKGROUND ::= get-rgb 255 255 255
 
-LABEL_Y ::= 380
-TOP_BUFFER_Y ::= 180
-BOTTOM_BUFFER_Y ::= 340
-TOP_BUFFER_X ::= 24
-BOTTOM_BUFFER_X ::= 24
+LABEL-Y ::= 380
+TOP-BUFFER-Y ::= 180
+BOTTOM-BUFFER-Y ::= 340
+TOP-BUFFER-X ::= 24
+BOTTOM-BUFFER-X ::= 24
 SPACING ::= 15
-COLUMN_WIDTH ::= 9
+COLUMN-WIDTH ::= 9
 
 class Element:
   height/int
   width/int
 
-  x_goal/int := 0
-  y_goal/int := 0
+  x-goal/int := 0
+  y-goal/int := 0
 
   x/int := 0
   y/int := 0
@@ -47,9 +47,9 @@ class Element:
 
   speed := 100.0
 
-  static hsl_to_rgb_ h/int s/int l/int -> int:
-    sf := s.to_float / 100.0
-    lf := l.to_float / 100.0
+  static hsl-to-rgb_ h/int s/int l/int -> int:
+    sf := s.to-float / 100.0
+    lf := l.to-float / 100.0
 
     a := sf * (min lf (1 - lf))
     f := (: | n |
@@ -62,55 +62,55 @@ class Element:
                   min (9 - k) 1
       lf - a * max1
     )
-    r := (255.0 * (f.call 0)).to_int
-    g := (255.0 * (f.call 8)).to_int
-    b := (255.0 * (f.call 4)).to_int
+    r := (255.0 * (f.call 0)).to-int
+    g := (255.0 * (f.call 8)).to-int
+    b := (255.0 * (f.call 4)).to-int
     [r, g, b].do: assert: 0 <= it <= 255
     return (r << 16) + (g << 8) + b
 
-  constructor display rect_context edge_context .x .y .width .height:
-    x_goal = x
-    y_goal = y
+  constructor display rect-context edge-context .x .y .width .height:
+    x-goal = x
+    y-goal = y
     hue := height + 120
-    context := rect_context.with --color=(hsl_to_rgb_ hue 80 50)
-    rectangle = display.filled_rectangle      context 0 0 width height
-    left      = display.filled_rectangle edge_context 0 0 1 height
-    right     = display.filled_rectangle edge_context 0 0 1 height
-    top       = display.filled_rectangle edge_context 0 0 width + 1 1
-    bottom    = display.filled_rectangle edge_context 0 0 width + 1 1
-    update_position_
+    context := rect-context.with --color=(hsl-to-rgb_ hue 80 50)
+    rectangle = display.filled-rectangle      context 0 0 width height
+    left      = display.filled-rectangle edge-context 0 0 1 height
+    right     = display.filled-rectangle edge-context 0 0 1 height
+    top       = display.filled-rectangle edge-context 0 0 width + 1 1
+    bottom    = display.filled-rectangle edge-context 0 0 width + 1 1
+    update-position_
 
-  update_position_:
-    rectangle.move_to x         y - height
-    left.move_to      x         y - height
-    right.move_to     x + width y - height
-    top.move_to       x         y - height
-    bottom.move_to    x         y
+  update-position_:
+    rectangle.move-to x         y - height
+    left.move-to      x         y - height
+    right.move-to     x + width y - height
+    top.move-to       x         y - height
+    bottom.move-to    x         y
 
-  move_goal x y:
-    x_goal = TOP_BUFFER_X + x * SPACING
-    y_goal = y
+  move-goal x y:
+    x-goal = TOP-BUFFER-X + x * SPACING
+    y-goal = y
 
   slide:
-    if x != x_goal or y != y_goal:
-      dx/num := x_goal - x
-      dy/num := y_goal - y
+    if x != x-goal or y != y-goal:
+      dx/num := x-goal - x
+      dy/num := y-goal - y
       angle := math.atan2 dy dx
       d := (dx * dx + dy * dy).sqrt
       vx += (math.cos angle) * d / speed
       vy += (math.sin angle) * d / speed
     x = (x + vx).round
     y = (y + vy).round
-    if (x - x_goal).sign == vx.sign:
+    if (x - x-goal).sign == vx.sign:
       vx = 0.0
-      x = x_goal
-    if (y - y_goal).sign == vy.sign:
+      x = x-goal
+    if (y - y-goal).sign == vy.sign:
       vy = 0.0
-      y = y_goal
-    update_position_
+      y = y-goal
+    update-position_
 
   arrived -> bool:
-    return x == x_goal and y == y_goal
+    return x == x-goal and y == y-goal
 
 class Cursor:
   height/int
@@ -128,27 +128,27 @@ class Cursor:
   constructor display context .width .height .padding:
     x = -10000
     y = -10000
-    left      = display.filled_rectangle context 0 0 1 height
-    right     = display.filled_rectangle context 0 0 1 height
-    top       = display.filled_rectangle context 0 0 width + 1 1
-    bottom    = display.filled_rectangle context 0 0 width + 1 1
-    update_position_
+    left      = display.filled-rectangle context 0 0 1 height
+    right     = display.filled-rectangle context 0 0 1 height
+    top       = display.filled-rectangle context 0 0 width + 1 1
+    bottom    = display.filled-rectangle context 0 0 width + 1 1
+    update-position_
 
   hide:
     x = -10000
     y = -10000
-    update_position_
+    update-position_
 
-  move_to x y:
-    this.x = TOP_BUFFER_X + x * SPACING - padding
+  move-to x y:
+    this.x = TOP-BUFFER-X + x * SPACING - padding
     this.y = y + padding
-    update_position_
+    update-position_
 
-  update_position_:
-    left.move_to      x         y - height
-    right.move_to     x + width y - height
-    top.move_to       x         y - height
-    bottom.move_to    x         y
+  update-position_:
+    left.move-to      x         y - height
+    right.move-to     x + width y - height
+    top.move-to       x         y - height
+    bottom.move-to    x         y
 
 usage:
   print "Usage:"
@@ -167,17 +167,17 @@ main args:
     usage
 
   if args[0] == "--naive":
-    display.remove_all
+    display.remove-all
     visualization := Visualization driver display "merge"
     visualization.naive
 
   else if args[0] == "--half":
-    display.remove_all
+    display.remove-all
     visualization := Visualization driver display "half"
     visualization.half
 
   else if args[0] == "--quarter":
-    display.remove_all
+    display.remove-all
     visualization := Visualization driver display "quarter"
     visualization.quarter
 
@@ -191,43 +191,43 @@ class Visualization:
   array /List
   cursor1 /Cursor
   cursor2 /Cursor
-  group_context := ?
-  text_context := ?
+  group-context := ?
+  text-context := ?
   group1 /Cursor? := null
   group2 /Cursor? := null
   ctr := 0
 
   constructor .driver .display .filename:
-    context := display.context --landscape --alignment=TEXT_TEXTURE_ALIGN_CENTER --color=(get_rgb 0 0 0) --font=FONT
+    context := display.context --landscape --alignment=TEXT-TEXTURE-ALIGN-CENTER --color=(get-rgb 0 0 0) --font=FONT
 
-    text_context = context
-    rect_context := context.with --color=(get_rgb 180 120 120)
-    edge_context := context.with --color=(get_rgb 20 20 20)
-    cursor_context := context.with --color=(get_rgb 255 20 20)
-    group_context = context.with --color=(get_rgb 20 20 255)
+    text-context = context
+    rect-context := context.with --color=(get-rgb 180 120 120)
+    edge-context := context.with --color=(get-rgb 20 20 20)
+    cursor-context := context.with --color=(get-rgb 255 20 20)
+    group-context = context.with --color=(get-rgb 20 20 255)
 
     array = List 32:
-      Element display rect_context edge_context
-          TOP_BUFFER_X + it * SPACING
-          TOP_BUFFER_Y
-          COLUMN_WIDTH
+      Element display rect-context edge-context
+          TOP-BUFFER-X + it * SPACING
+          TOP-BUFFER-Y
+          COLUMN-WIDTH
           20 + (random 120)
 
-    cursor1 = Cursor display cursor_context COLUMN_WIDTH + 4 144 2
-    cursor2 = Cursor display cursor_context COLUMN_WIDTH + 4 144 2
+    cursor1 = Cursor display cursor-context COLUMN-WIDTH + 4 144 2
+    cursor2 = Cursor display cursor-context COLUMN-WIDTH + 4 144 2
 
     20.repeat:
       write
 
-  swap_pairs y:
+  swap-pairs y:
     for i := 0; i < array.size; i += 2:
       first := array[i]
       second := array[i + 1]
       if first.height > second.height:
         array[i] = second
         array[i + 1] = first
-        first.move_goal i + 1 y
-        second.move_goal i y
+        first.move-goal i + 1 y
+        second.move-goal i y
       array.do:
         it.slide
       write
@@ -237,46 +237,46 @@ class Visualization:
   naive:
     //display.text text_context WIDTH/2 LABEL_Y "Two-buffer merge sort"
     20.repeat: write
-    swap_pairs TOP_BUFFER_Y
-    naive_sort 2 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    naive_sort 4 BOTTOM_BUFFER_Y TOP_BUFFER_Y
-    naive_sort 8 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    naive_sort 16 BOTTOM_BUFFER_Y TOP_BUFFER_Y
+    swap-pairs TOP-BUFFER-Y
+    naive-sort 2 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    naive-sort 4 BOTTOM-BUFFER-Y TOP-BUFFER-Y
+    naive-sort 8 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    naive-sort 16 BOTTOM-BUFFER-Y TOP-BUFFER-Y
     20.repeat: write
 
-  naive_sort size/int from_y/int to_y/int:
+  naive-sort size/int from-y/int to-y/int:
     print "naive: Sort $size image $ctr"
-    dest_array := []
-    group1 = Cursor display group_context (SPACING * size) 146 3
-    group2 = Cursor display group_context (SPACING * size) 146 3
+    dest-array := []
+    group1 = Cursor display group-context (SPACING * size) 146 3
+    group2 = Cursor display group-context (SPACING * size) 146 3
 
     for i := 0; i < array.size; i += size * 2:
-      group1.move_to i from_y
-      group2.move_to i + size from_y
+      group1.move-to i from-y
+      group2.move-to i + size from-y
       dest := i
       x := i
       x2 := i + size
       while x < i + size or x2 < i + size * 2:
-        cursor1.move_to x from_y
-        cursor2.move_to x2 from_y
+        cursor1.move-to x from-y
+        cursor2.move-to x2 from-y
 
-        pick_left := ?
+        pick-left := ?
         if x == i + size:
           cursor1.hide
-          pick_left = false
+          pick-left = false
         else if x2 == i + size * 2:
           cursor2.hide
-          pick_left = true
+          pick-left = true
         else:
-          pick_left = array[x].height <= array[x2].height
+          pick-left = array[x].height <= array[x2].height
         write
-        new_x := dest_array.size
-        mover := pick_left ? array[x++] : array[x2++]
-        mover.move_goal new_x to_y
-        dest_array.add mover
-        slide_steps --steps=10
+        new-x := dest-array.size
+        mover := pick-left ? array[x++] : array[x2++]
+        mover.move-goal new-x to-y
+        dest-array.add mover
+        slide-steps --steps=10
 
-    array.replace 0 dest_array
+    array.replace 0 dest-array
     cursor1.hide
     cursor2.hide
     complete
@@ -287,77 +287,77 @@ class Visualization:
   half:
     //display.text text_context WIDTH/2 LABEL_Y "Merge sort with half-sized buffer"
     20.repeat: write
-    buffer := Cursor display group_context (SPACING * array.size / 2) 146 3
-    buffer.move_to 0 BOTTOM_BUFFER_Y
-    swap_pairs TOP_BUFFER_Y
-    half_sort 0 2 2 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 0 4 4 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 0 8 8 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 0 16 16 TOP_BUFFER_Y BOTTOM_BUFFER_Y
+    buffer := Cursor display group-context (SPACING * array.size / 2) 146 3
+    buffer.move-to 0 BOTTOM-BUFFER-Y
+    swap-pairs TOP-BUFFER-Y
+    half-sort 0 2 2 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 0 4 4 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 0 8 8 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 0 16 16 TOP-BUFFER-Y BOTTOM-BUFFER-Y
     buffer.hide
     100.repeat: write
 
   quarter:
     //display.text text_context WIDTH/2 LABEL_Y "Merge sort with ¼-sized buffer"
     20.repeat: write
-    swap_pairs TOP_BUFFER_Y
-    buffer := Cursor display group_context (SPACING * array.size / 4) 146 3
-    buffer.move_to 0 BOTTOM_BUFFER_Y
-    half_sort 0 2 2 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 0 4 4 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 16 8 8 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 8 8 16 TOP_BUFFER_Y BOTTOM_BUFFER_Y
-    half_sort 0 8 24 TOP_BUFFER_Y BOTTOM_BUFFER_Y
+    swap-pairs TOP-BUFFER-Y
+    buffer := Cursor display group-context (SPACING * array.size / 4) 146 3
+    buffer.move-to 0 BOTTOM-BUFFER-Y
+    half-sort 0 2 2 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 0 4 4 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 16 8 8 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 8 8 16 TOP-BUFFER-Y BOTTOM-BUFFER-Y
+    half-sort 0 8 24 TOP-BUFFER-Y BOTTOM-BUFFER-Y
     buffer.hide
     100.repeat: write
 
-  half_sort start/int size1/int size2/int from_y/int to_y/int:
+  half-sort start/int size1/int size2/int from-y/int to-y/int:
     print "half: Sort $size1/$size2 image $ctr"
-    dest_array := []
-    group1 = Cursor display group_context (SPACING * (size1 + size2)) 146 3
+    dest-array := []
+    group1 = Cursor display group-context (SPACING * (size1 + size2)) 146 3
 
-    pick_state := null
+    pick-state := null
 
     for i := start; i < array.size; i += size1 + size2:
       complete
-      group1.move_to i from_y
-      dest_array = []
+      group1.move-to i from-y
+      dest-array = []
       for x := i; x < i + size1; x++:
         item := array[x]
         array[x] = null
-        dest_array.add item
-        item.move_goal x - i to_y
-      complete dest_array
+        dest-array.add item
+        item.move-goal x - i to-y
+      complete dest-array
 
       dest := i
       x := i + size1
       x2 := 0
       idx := i
       while x2 < size1:
-        cursor1.move_to x from_y
-        cursor2.move_to x2 to_y
+        cursor1.move-to x from-y
+        cursor2.move-to x2 to-y
 
-        pick_left := ?
+        pick-left := ?
         if x == i + size1 + size2:
           cursor1.hide
-          pick_left = false
+          pick-left = false
         else if x2 == size1:
           cursor2.hide
-          pick_left = true
+          pick-left = true
         else:
-          pick_left = array[x].height <= dest_array[x2].height
-        if pick_left != pick_state:
+          pick-left = array[x].height <= dest-array[x2].height
+        if pick-left != pick-state:
           complete
-          pick_state = pick_left
+          pick-state = pick-left
         mover := ?
-        if pick_left:
+        if pick-left:
           mover = array[x]
           array[x++] = null
         else:
-          mover = dest_array[x2++]
-        mover.move_goal idx from_y
+          mover = dest-array[x2++]
+        mover.move-goal idx from-y
         array[idx++] = mover
-        slide_steps --steps=2
+        slide-steps --steps=2
 
       cursor1.hide
       cursor2.hide
@@ -365,7 +365,7 @@ class Visualization:
       group1.hide
       write
 
-  slide_steps list/List=array --steps=10 -> none:
+  slide-steps list/List=array --steps=10 -> none:
     while steps > 0 and (list.any: it and not it.arrived):
       list.do: if it: it.slide
       steps--
@@ -377,4 +377,4 @@ class Visualization:
       write
 
   write:
-    write_file "$filename$(%04d ctr++).png" driver display
+    write-file "$filename$(%04d ctr++).png" driver display
