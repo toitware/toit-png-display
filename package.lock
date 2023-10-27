@@ -1,7 +1,19 @@
+sdk: ^2.0.0-alpha.97
 prefixes:
   pixel_display: toit-pixel-display
+  png-tools: toit-png-reader
 packages:
+  pkg-host:
+    url: github.com/toitlang/pkg-host
+    name: host
+    version: 1.11.0
+    hash: 7e7df6ac70d98a02f232185add81a06cec0d77e8
   toit-pixel-display:
     url: github.com/toitware/toit-pixel-display
+    name: pixel_display
     version: 1.6.0
     hash: 39de82f680e27961e39ca24ba94520f21759370c
+  toit-png-reader:
+    path: ../toit-png-reader
+    prefixes:
+      host: pkg-host

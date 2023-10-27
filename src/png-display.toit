@@ -8,6 +8,7 @@ import bytes show Buffer
 import crypto.crc show *
 import monitor show Latch
 import pixel-display show *
+import png-tools.png-writer show PngWriter
 import zlib show *
 
 class TwoColorPngDriver extends PngDriver_:
@@ -50,10 +51,8 @@ abstract class PngDriver_ extends AbstractDriver:
   abstract width-to-byte-width w/int -> int
 
   // Used while writing:
-  compressor_ /RunLengthZlibEncoder? := null
-  done_ /Latch? := null
-  compressed_ /Buffer? := null
-  writeable_ := null
+  png-writer_ /PngWriter? := null
+  reproducible_ /bool := false
   y_ /int := 0
 
   static INVERT_ := ByteArray 0x100: 0xff - it
@@ -173,35 +172,12 @@ abstract class PngDriver_ extends AbstractDriver:
       row += rounded-width_
     write-buffer_ patch-height buffer
 
-  static HEADER ::= #[0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n']
-
-  static write-chunk stream name/string data/ByteArray -> none:
-    length := ByteArray 4
-    if name.size != 4: throw "invalid name"
-    BIG-ENDIAN.put-uint32 length 0 data.size
-    write_ stream length
-    write_ stream name
-    write_ stream data
-    crc := Crc32
-    crc.add name
-    crc.add data
-    write_ stream
-      byte-swap_
-        crc.get
-
-  static write_ stream byte-array -> none:
-    done := 0
-    while done != byte-array.size:
-      done += stream.write byte-array[done..]
-
   write-header_ writeable --reproducible/bool -> none:
     true-color := flags & FLAG-TRUE-COLOR != 0
     gray := flags & FLAG-4-COLOR != 0
     three-color := flags & FLAG-3-COLOR != 0
     gray-scale := flags & FLAG-GRAY-SCALE != 0
     several-color := flags & FLAG-SEVERAL-COLOR != 0
-
-    write_ writeable HEADER
 
     bits-per-pixel := ?
     color-type := ?
@@ -224,26 +200,21 @@ abstract class PngDriver_ extends AbstractDriver:
       bits-per-pixel = 1
       color-type = 0  // Grayscale
 
-    ihdr := #[
-      0, 0, 0, 0,          // Width.
-      0, 0, 0, 0,          // Height.
-      bits-per-pixel,
-      color-type,
-      0, 0, 0,
-    ]
-    BIG-ENDIAN.put-uint32 ihdr 0 width
-    BIG-ENDIAN.put-uint32 ihdr 4 height
-    write-chunk writeable "IHDR" ihdr
+    png-writer_ = PngWriter writeable width height
+        --run-length-encoding
+        --bit-depth=bits-per-pixel
+        --color-type=color-type
+        --all-in-one-chunk=reproducible
 
     if three-color:
-      write-chunk writeable "PLTE" #[  // Palette.
+      png-writer_.write-chunk "PLTE" #[  // Palette.
           0xff, 0xff, 0xff,         // 0 is white.
           0, 0, 0,                  // 1 is black.
           0xff, 0, 0,               // 2 is red.
         ]
     else if several-color:
       // Use color palette of 7-color epaper display.
-      write-chunk writeable "PLTE" #[  // Palette.
+      png-writer_.write-chunk "PLTE" #[  // Palette.
           0xff, 0xff, 0xff,         // 0 is white.
           0, 0, 0,                  // 1 is black.
           0xff, 0, 0,               // 2 is red.
@@ -253,19 +224,7 @@ abstract class PngDriver_ extends AbstractDriver:
           0xff, 0xc0, 0,            // 6 is orange
         ]
 
-    compressor_ = RunLengthZlibEncoder
-    done_ = Latch
-    compressed_ = Buffer
-    writeable_ = writeable
     y_ = 0
-
-    task::
-      while data := compressor_.reader.read:
-        compressed_.write data
-        if (not reproducible) and compressed_.size > 1900:
-          write-chunk writeable_ "IDAT" compressed_.bytes  // Flush compressed pixel data.
-          compressed_ = Buffer
-      done_.set null
 
   write-buffer_ height/int buffer/ByteArray -> none:
     zero-byte := #[0]
@@ -273,7 +232,7 @@ abstract class PngDriver_ extends AbstractDriver:
     several-color := flags & FLAG-SEVERAL-COLOR != 0
     height.repeat: | y |
       if y_ >= this.height: return
-      compressor_.write zero-byte  // Adaptive scheme.
+      png-writer_.write-uncompressed zero-byte  // Adaptive scheme.
       line-size := width-to-byte-width width
       index := y * line-size
       line := buffer[index..index + line-size]
@@ -281,24 +240,11 @@ abstract class PngDriver_ extends AbstractDriver:
         line = ByteArray line.size: line[it] ^ 0xff
       else if several-color:
         line = ByteArray line.size: min 6 line[it]
-      compressor_.write line
+      png-writer_.write-uncompressed line
       y_++
 
   write-footer_:
-    compressor_.close
-
-    // Wait for the reader task to finish.
-    done_.get
-
-    if compressed_.size != 0:
-      write-chunk writeable_ "IDAT" compressed_.bytes  // Compressed pixel data.
-
-    compressed_ = null
-    compressor_ = null
-    done_ = null
-    y_ = 0
-
-    write-chunk writeable_ "IEND" #[]  // End chunk.
+    png-writer_.close
 
 byte-swap_ ba/ByteArray -> ByteArray:
   result := ba.copy
