@@ -6,4 +6,4 @@ dependencies:
     url: github.com/toitware/toit-pixel-display
     version: ^1.6.0
   png-tools:
-    path: ../toit-png-reader/
+    path: ../toit-png-tools/

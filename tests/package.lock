@@ -11,7 +11,7 @@ packages:
     path: ..
     prefixes:
       pixel_display: toit-pixel-display
-      png-tools: toit-png-reader
+      png-tools: toit-png-tools
   pkg-font-x11-adobe:
     url: github.com/toitlang/pkg-font-x11-adobe
     name: font_x11_adobe
@@ -37,7 +37,5 @@ packages:
     name: pixel_display
     version: 1.6.1
     hash: 61693447fcf73e7dd4044780fd7991c2d371b7ec
-  toit-png-reader:
-    path: ../../toit-png-reader
-    prefixes:
-      host: pkg-host
+  toit-png-tools:
+    path: ../../toit-png-tools
