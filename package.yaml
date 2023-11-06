@@ -1,4 +1,5 @@
 name: png_display
+description: A pseudo-pixel-display that writes PNG files.
 environment:
   sdk: ^2.0.0-alpha.92
 dependencies:
