@@ -4,7 +4,9 @@
 
 import png-display show *
 import pixel-display show *
+import pixel-display.element show *
 import pixel-display.several-color
+import pixel-display.style show *
 import font show *
 
 import .write-file
@@ -19,16 +21,18 @@ ORANGE ::= 6
 
 main args:
   driver := SeveralColorPngDriver 104 50
-  display := SeveralColorPixelDisplay driver
+  display := PixelDisplay.several-color driver
   display.background = WHITE
 
-  context := display.context --landscape --color=BLACK --font=(Font.get "sans10")
-  orange := context.with --color=ORANGE
-  blue := context.with --color=BLUE
+  font := Font.get "sans10"
+  context := Style --color=BLACK --font=font
+  orange := Style --color=ORANGE --font=font
+  blue := Style --color=BLUE --font=font
 
-  display.text context 5 30 "Toit"
-  display.text orange 35 20 "Orange"
-  display.text blue 35 40 "Blue"
+  display.add (Label --style=context --x=5 --y=30 --label="Toit")
+  display.add (Label --style=orange --x=35 --y=20 --label="Orange")
+  display.add (Label --style=blue --x=35 --y=40 --label="Blue")
+  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 
