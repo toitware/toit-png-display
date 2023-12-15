@@ -21,7 +21,6 @@ main args:
 
   display.add (Label --style=style --x=20 --y=30 --label="Toit")
   display.add (Label --style=red --x=60 --y=30 --label="Red")
-  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 

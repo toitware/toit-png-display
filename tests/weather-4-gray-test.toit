@@ -34,8 +34,6 @@ main args:
       Label --style=location-style --x=20 --y=100 --label="Borås",
   ].do: display.add it
 
-  display.set-styles []  // Workaround.
-
   filename := args.size == 0 ? "-" : args[0]
 
   print "Writing $filename"
