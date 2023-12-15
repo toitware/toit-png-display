@@ -16,10 +16,10 @@ main args:
   display := PixelDisplay.three-color driver
   display.background = WHITE
 
-  context := Style --color=BLACK --font=(Font.get "sans10")
+  style := Style --color=BLACK --font=(Font.get "sans10")
   red := Style --color=RED --font=(Font.get "sans10")
 
-  display.add (Label --style=context --x=20 --y=30 --label="Toit")
+  display.add (Label --style=style --x=20 --y=30 --label="Toit")
   display.add (Label --style=red --x=60 --y=30 --label="Red")
   display.set-styles []  // Workaround.
 

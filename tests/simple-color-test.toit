@@ -15,10 +15,10 @@ main args:
   driver := TrueColorPngDriver 104 50
   display := PixelDisplay.true-color driver
 
-  context := Style --color=(get-rgb 255 128 128) --font=(Font.get "sans10")
+  style := Style --color=(get-rgb 255 128 128) --font=(Font.get "sans10")
   blue := Style --color=(get-rgb 30 40 255) --font=(Font.get "sans10")
 
-  display.add (Label --style=context --x=20 --y=30 --label="Toit")
+  display.add (Label --style=style --x=20 --y=30 --label="Toit")
   display.add (Label --style=blue --x=50 --y=30 --label="50%")
   display.set-styles []  // Workaround.
 

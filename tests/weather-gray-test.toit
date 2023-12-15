@@ -22,16 +22,16 @@ main args:
   font := Font [bold.ASCII, bold.LATIN-1-SUPPLEMENT]
   time-font := Font [black.ASCII]
 
-  context := Style --color=160 --font=font
-  icon-context := Style --color=220
+  style := Style --color=160 --font=font
+  icon-style := Style --color=220
   time := Style --color=60 --font=time-font
-  location-context := Style --color=120 --font=font
+  location-style := Style --color=120 --font=font
 
   [
-      Label --style=context --x=20 --y=200 --label="Rain with thunder",
-      Label --style=icon-context --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
+      Label --style=style --x=20 --y=200 --label="Rain with thunder",
+      Label --style=icon-style --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
       Label --style=time --x=20 --y=40 --label="13:37",
-      Label --style=location-context --x=20 --y=100 --label="Borås",
+      Label --style=location-style --x=20 --y=100 --label="Borås",
   ].do: display.add it
 
   display.set-styles []  // Workaround.

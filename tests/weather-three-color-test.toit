@@ -22,16 +22,16 @@ main args:
   font := Font [bold.ASCII, bold.LATIN-1-SUPPLEMENT]
   time-font := Font [black.ASCII]
 
-  context := Style --color=RED --font=font
-  icon-context := Style --color=BLACK
+  style := Style --color=RED --font=font
+  icon-style := Style --color=BLACK
   time := Style --color=BLACK --font=time-font
-  location-context := Style --color=RED --font=font
+  location-style := Style --color=RED --font=font
 
   [
-      Label --style=context --x=20 --y=200 --label="Rain with thunder",
-      Label --style=icon-context --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
+      Label --style=style --x=20 --y=200 --label="Rain with thunder",
+      Label --style=icon-style --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
       Label --style=time --x=20 --y=40 --label="13:37",
-      Label --style=location-context --x=20 --y=100 --label="Borås",
+      Label --style=location-style --x=20 --y=100 --label="Borås",
   ].do: display.add it
 
   filename := args.size == 0 ? "-" : args[0]

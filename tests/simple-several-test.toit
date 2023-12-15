@@ -25,11 +25,11 @@ main args:
   display.background = WHITE
 
   font := Font.get "sans10"
-  context := Style --color=BLACK --font=font
+  style := Style --color=BLACK --font=font
   orange := Style --color=ORANGE --font=font
   blue := Style --color=BLUE --font=font
 
-  display.add (Label --style=context --x=5 --y=30 --label="Toit")
+  display.add (Label --style=style --x=5 --y=30 --label="Toit")
   display.add (Label --style=orange --x=35 --y=20 --label="Orange")
   display.add (Label --style=blue --x=35 --y=40 --label="Blue")
   display.set-styles []  // Workaround.
