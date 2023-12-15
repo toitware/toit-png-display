@@ -2,8 +2,6 @@
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
-// TODO: Rewrite with a custom element, instead of lots of Divs and Labels.
-
 import bitmap show bytemap-draw-text ORIENTATION-0
 import font show *
 import pixel-display show *
@@ -45,201 +43,260 @@ main:
   diagram "blit"
   diagram "blit-stride" --pixel-stride=2 --extra-code="  --destination-pixel-stride=2"
 
+STYLE ::= Style
+    --class-map = {
+        "stride-line": Style --background=0xff0000,
+        "stride-label": Style --color=0xff0000 --font=SANS-10,
+        "offset-line": Style --background=0x2828c8,
+        "offset-label": Style --color=0x2828c8 --font=SANS-10,
+        "title": Style --font=(Font [sans-24-bold.ASCII]) --color=0x323232,
+    }
+    --type-map = {
+        "grid": Style --color=0x000000 { "square-size": BYTE-SIZE },
+        "slice": Style --color=0xff0000 { "thickness": 3, "square-size": BYTE-SIZE },
+        "picture": Style { "color-1": 0xff_be_aa, "color-0": 0xc0_96_6e, "square-size": BYTE-SIZE },
+        "code": Style --font=CODE-FONT --color=0x000000 {
+            "color-comment": 0x0000ff,
+            "color-literal": 0xffc0c0,
+        },
+    }
+
 // Generates a PNG file showing how blit works.
 diagram filename/string --pixel-stride=1 --extra-code=null:
   driver := TrueColorPngDriver WIDTH HEIGHT
   display := PixelDisplay.true-color driver
 
-  stride-span-style := Style --color=0xff0000 --font=SANS-10 --background=0xff0000
-  stride-style := Style --background=0x2828c8 --font=SANS-10
-  stride-label-style := Style --color=0x2828c8 --font=SANS-10
-
-  grid display stride-style stride-label-style stride-span-style "Source" "source" SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT
-  grid display stride-style stride-label-style stride-span-style "Dest" "destination" DEST-X DEST-Y DEST-WIDTH DEST-HEIGHT
-
-  picture display "blit" 5 SOURCE-HEIGHT - 2 SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT
-
-  picture display "b" 0 12 DEST-X DEST-Y 8 13 --pixel-stride=pixel-stride
-
-  // Slice of source.
-  slice display SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT 5 3 13 16
-
-  // Slice legend.
-  slice display 600 130 4 3 1 0 3 2
   display.add
-      Label
-          --style = stride-span-style
-          --x = 600 + 5 * BYTE-SIZE
-          --y = 150
-          --label = "= slice of byte array"
+      Div --x=0 --y=0 --w=WIDTH --h=HEIGHT --background=0xffffff [
+          Picture --x=SOURCE-X --y=SOURCE-Y "blit" --text-x=5 --text-y=(SOURCE-HEIGHT - 2) --w=SOURCE-WIDTH --h=SOURCE-HEIGHT,
+          Grid --x=SOURCE-X --y=SOURCE-Y --width=SOURCE-WIDTH --height=SOURCE-HEIGHT,
+          Slice --x=SOURCE-X --y=SOURCE-Y --byte-array-width=SOURCE-WIDTH 5 3 13 16,
+          Picture --x=DEST-X --y=DEST-Y "b" --text-x=0 --text-y=12 --w=8 --h=13 --pixel-stride=pixel-stride,
+          Grid --x=DEST-X --y=DEST-Y --width=DEST-WIDTH --height=DEST-HEIGHT,
+          Slice --x=600 --y=130 --byte-array-width=4 1 0 3 2,
+          Label
+              --classes = ["stride-label"]
+              --x = 600 + 5 * BYTE-SIZE
+              --y = 150
+              --label = "= slice of byte array",
+          Code --x=50 --y=421 --w=500 --h=330 --id="code" """
+                // Copy 8x13 rectangle at (5, 4)
+                //   from source to dest.
+                X := 5
+                Y := 4
+                W := 8
+                H := 9
+                SLS := 30  // Source line stride.
+                DLS := 20  // Dest line stride.
+                slice-start := X + Y * SLS
+                slice-end := X + W + (Y + H) * SLS
+                blit
+                  source[slice-start..slice-end]
+                  dest
+                  W
+                  --source-line-stride=SLS
+                  --destination-line-stride=DLS
+                """,
+      ]
 
-  code-style := Style --color=0x000000 --font=CODE-FONT
-  comment-style := Style --color=0x0000ff --font=CODE-FONT
-  literal-style := Style --color=0xffc0c0 --font=CODE-FONT
-  code := Code display 50 440 CODE-FONT code-style comment-style literal-style
-
-  code.line "// Copy 8x13 rectangle at (5, 4)"
-  code.line "// from source to dest."
-  code.line "X := 5"
-  code.line "Y := 4"
-  code.line "W := 8"
-  code.line "H := 9"
-  code.line "SLS := 30  // source line stride."
-  code.line "DLS := 20  // dest line stride."
-  code.line "slice-start := X + Y * SLS"
-  code.line "slice-end := X + W + (Y + H) * SLS"
-  code.line "blit"
-  code.line "  source[slice-start..slice-end]"
-  code.line "  dest"
-  code.line "  W"
-  code.line "  --source-line-stride=SLS"
-  code.line "  --destination-line-stride=DLS"
   if extra-code:
-    code.line extra-code
+    (display.get-element-by-id "code").text += extra-code
+
+  add-grid-annotations display "Source" "source" SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT
+  add-grid-annotations display "Dest" "destination" DEST-X DEST-Y DEST-WIDTH DEST-HEIGHT
+
+  display.set-styles [STYLE]
 
   write-file "$(filename).png" driver display
 
 // Used to display the code snippet in the diagram.
-class Code:
-  display/PixelDisplay
-  x/int
-  y/int := ?
-  font/Font
-  code-style/Style
-  comment-style/Style
-  literal-style/Style
+class Code extends CustomElement:
+  color/int := 0x000000
+  color-comment/int := 0x0000ff
+  color-literal/int := 0xffc0c0
+  font/Font? := null
+  text_/string := ""
 
-  constructor .display .x .y .font .code-style .comment-style .literal-style:
+  constructor --x/int?=null --y/int?=null --w/int?=null --h/int?=null --id/string?=null .text_:
+    super --x=x --y=y --w=w --h=h --id=id
 
-  line text/string:
-    comment := text.index-of "//"
-    if comment != -1:
-      code := text.copy 0 comment
-      width := font.pixel-width code
-      display.add
-          Label --style=comment-style --x=(x + width) --y=y --label=text[comment..]
-      text = text[..comment]
-    if text.size != 0 and ' ' <= text[text.size - 1] <= '9':
-      literal := ""
-      while ' ' <= text[text.size - 1] <= '9':
-        literal = text[text.size - 1..] + literal
-        text = text.copy 0 text.size - 1
-      width := font.pixel-width text
-      display.add
-          Label --style=literal-style --x=(x + width) --y=y --label=literal
-    display.add
-        Label --style=code-style --x=x --y=y --label=text
-    y += 19
+  type -> string: return "code"
 
-// Draws the outline of a slice on a ByteArray of size W * H.
-slice display X Y W H left top right bottom:
-  red-line := Style --background=0xff0000
+  set-attribute_ key/string value -> none:
+    if key == "color":
+      invalidate
+      color = value
+    else if key == "color-comment":
+      invalidate
+      color-comment = value
+    else if key == "color-literal":
+      invalidate
+      color-literal = value
+    else if key == "font":
+      invalidate
+      font = value
+    else:
+      super key value
 
-  display.add
-      Div --style=red-line
-          --x = X
-          --y = Y + (top + 1) * BYTE-SIZE
-          --w = 3
-          --h = (bottom - top - 1) * BYTE-SIZE
+  text= value/string -> none:
+    invalidate
+    text_ = value
 
-  display.add
-      Div --style=red-line
-          --x = X
-          --y = Y + (top + 1) * BYTE-SIZE
-          --w = left * BYTE-SIZE + 3
-          --h = 3
+  text -> string:
+    return text_
 
-  display.add
-      Div --style=red-line
-          --x = X + left * BYTE-SIZE
-          --y = Y + top * BYTE-SIZE + 3
-          --w = 3
-          --h = BYTE-SIZE
+  custom-draw canvas/Canvas -> none:
+    y := 19
+    text_.split "\n": | line |
+      comment := line.index-of "//"
+      if comment != -1:
+        code := line.copy 0 comment
+        width := font.pixel-width code
+        canvas.text width y --text=line[comment..] --color=color-comment --font=font
+        line = line[..comment]
+      if line.size != 0 and ' ' <= line[line.size - 1] <= '9':
+        literal := ""
+        while ' ' <= line[line.size - 1] <= '9':
+          literal = line[line.size - 1..] + literal
+          line = line.copy 0 line.size - 1
+        width := font.pixel-width line
+        canvas.text width y --text=literal --color=color-literal --font=font
+      canvas.text 0 y --text=line --color=color --font=font
+      y += 19
 
-  display.add
-      Div --style=red-line
-          --x = X + left * BYTE-SIZE
-          --y = Y + top * BYTE-SIZE
-          --w = (W - left) * BYTE-SIZE
-          --h = 3
+/// Draws the outline of a slice on a ByteArray that is W bytes wide.
+class Slice extends CustomElement:
+  color/int := ?
+  byte-array-width/int
+  left/int := ?
+  top/int := ?
+  right/int := ?
+  bottom/int := ?
+  thickness/int := 1
+  square-size_/int := 20
 
-  display.add
-      Div --style=red-line
-          --x = X + W * BYTE-SIZE - 3
-          --y = Y + top * BYTE-SIZE
-          --w = 3
-          --h = (bottom - top - 1) * BYTE-SIZE
+  constructor --.byte-array-width --x/int?=null --y/int?=null --.color/int?=0 --square-size/int=20 .left .top .right .bottom:
+    square-size_ = square-size
+    super --x=x --y=y --w=(square-size * byte-array-width) --h=(square-size * bottom)
 
-  display.add
-      Div --style=red-line
-          --x = X + right * BYTE-SIZE - 3
-          --y = Y + (bottom - 1) * BYTE-SIZE - 3
-          --w = (W - right) * BYTE-SIZE
-          --h = 3
+  type -> string: return "slice"
 
-  display.add
-      Div --style=red-line
-          --x = X + right * BYTE-SIZE - 3
-          --y = Y + (bottom - 1) * BYTE-SIZE - 3
-          --w = 3
-          --h = BYTE-SIZE
+  set-attribute_ key/string value -> none:
+    if key == "thickness":
+      invalidate
+      thickness = value
+    else if key == "color":
+      invalidate
+      color = value
+    else if key == "square-size":
+      square-size_ = value
+      w = square-size_ * byte-array-width
+      h = square-size_ * bottom
+    else:
+      super key value
 
-  display.add
-      Div --style=red-line
-          --x = X
-          --y = Y + bottom * BYTE-SIZE - 3
-          --w = right * BYTE-SIZE
-          --h = 3
+  vertical_ canvas/Canvas --x/int --y/int --h/int:
+    canvas.rectangle x y --w=thickness --h=h --color=color
 
-// Draws an image in the ByteArray (some letters).
-picture display/PixelDisplay text/string text-x/int text-y/int X/int Y/int W/int H/int --pixel-stride=1:
-  fg := Style --background=0xff_be_aa --font=SANS-10
-  bg := Style --background=0xc0_96_6e --font=SANS-10
+  horizontal_ canvas/Canvas --x/int --y/int --w/int:
+    canvas.rectangle x y --w=w --h=thickness --color=color
 
-  img := ByteArray W * H
+  custom-draw canvas/Canvas:
+    vertical_ canvas --x=0 --y=((top + 1) * square-size_) --h=((bottom - top - 1) * square-size_)
+    horizontal_ canvas --x=0 --y=((top + 1) * square-size_) --w=(left * square-size_ + thickness)
+    vertical_ canvas --x=(left * square-size_) --y=(top * square-size_ + thickness) --h=square-size_
+    horizontal_ canvas --x=(left * square-size_) --y=(top * square-size_) --w=((byte-array-width - left) * square-size_)
+    vertical_ canvas --x=(byte-array-width * square-size_ - thickness) --y=(top * square-size_) --h=((bottom - top - 1) * square-size_)
+    horizontal_ canvas --x=(right * square-size_ - thickness) --y=((bottom - 1) * square-size_ - thickness) --w=((byte-array-width - right) * square-size_)
+    vertical_ canvas --x=(right * square-size_ - thickness) --y=((bottom - 1) * square-size_ - thickness) --h=square-size_
+    horizontal_ canvas --x=0 --y=(bottom * square-size_ - thickness) --w=(right * square-size_)
 
-  bytemap-draw-text text-x text-y 255 ORIENTATION-0 text SANS-10 img W
+class Picture extends CustomElement:
+  color-0/int := 0x000000
+  color-1/int := 0xffffff
+  text/string
+  text-x/int
+  text-y/int
+  pixel-stride/int
+  width/int := 1  // In bytes, not pixels.
+  height/int := 1 // In bytes, not pixels.
+  square-size_/int := 20
 
-  for y := 0; y < H; y++:
-    for x := 0; x < W; x++:
-      rect := Div
-        --style = img[y * W + x] == 0 ? bg : fg
-        --x = X + (x * pixel-stride) * BYTE-SIZE + 1
-        --y = Y + y * BYTE-SIZE + 1
-        --w = BYTE-SIZE - 1
-        --h = BYTE-SIZE - 1
-      display.add rect
+  constructor .text/string --.text-x --.text-y --.pixel-stride=1 --x/int?=null --y/int?=null --w/int --h/int --square-size/int=20:
+    square-size_ = square-size
+    super --x=x --y=y --w=(square-size * w * pixel-stride) --h=(square-size * h)
+    width = w
+    height = h
 
-// Draws a grid that represents a ByteArray used as a 2D bytemap.
-grid display/PixelDisplay grid-style/Style label-style/Style stride-span-style/Style name/string lc-name/string X/int Y/int W/int H/int:
-  style := Style --background=0x000000
+  type -> string: return "picture"
 
-  for y := 0; y <= H; y++:
-    display.add
-        Div
-            --style = style
-            --x = X
-            --y = Y + y * BYTE-SIZE
-            --w = BYTE-SIZE * W + 1
-            --h = 1
+  set-attribute_ key/string value -> none:
+    if key == "color-0":
+      invalidate
+      color-0 = value
+    else if key == "color-1":
+      invalidate
+      color-1 = value
+    else if key == "square-size":
+      square-size_ = value
+      w = square-size_ * width
+      h = square-size_ * height
+    else:
+      super key value
 
-  for x := 0; x <= W; x++:
-    display.add
-        Div
-            --style = style
-            --x = X + x * BYTE-SIZE
-            --y = Y
-            --w = 1
-            --h = BYTE-SIZE * H + 1
+  custom-draw canvas/Canvas:
+    // Draw text that we will scale up.
+    img := ByteArray width * height
+    bytemap-draw-text text-x text-y 255 ORIENTATION-0 text SANS-10 img width
 
-  title-font := Style --font=(Font [sans-24-bold.ASCII]) --color=0x323232
+    for y := 0; y < height; y++:
+      for x := 0; x < width; x++:
+        canvas.rectangle
+          (x * pixel-stride) * square-size_ + 1
+          y * square-size_ + 1
+          --w = square-size_ - 1
+          --h = square-size_ - 1
+          --color = img[y * width + x] == 0 ? color-0 : color-1
 
-  label := Label --style=title-font --x=X --y=(Y - 30) --label="$(name) $(W)x$(H) = $(W * H) bytes"
+/// Draws a grid that represents a ByteArray used as a 2D bytemap.
+class Grid extends CustomElement:
+  color/int := ?
+  width/int
+  height/int
+  square-size_/int := 20
+
+  constructor --.width --.height --x/int?=null --y/int?=null --.color/int?=0 --square-size/int=20:
+    square-size_ = square-size
+    super --x=x --y=y --w=(square-size * width + 1) --h=(square-size * height + 1)
+
+  type -> string: return "grid"
+
+  set-attribute_ key/string value -> none:
+    if key == "color":
+      invalidate
+      color = value
+    else if key == "square-size":
+      square-size_ = value
+      w = (square-size_ * width + 1)
+      h = (square-size_ * height + 1)
+    else:
+      super key value
+
+  custom-draw canvas/Canvas:
+    for y := 0; y <= height; y++:
+      canvas.rectangle 0 (y * square-size_) --w=(width * square-size_ + 1) --h=1 --color=color
+    for x := 0; x <= width; x++:
+      canvas.rectangle (x * square-size_) 0 --w=1 --h=(height * square-size_ + 1) --color=color
+
+/// Draws the annotations on a grid that represents a ByteArray used as a 2D bytemap.
+/// TODO: Rewrite with a custom element, instead of lots of Divs and Labels.
+add-grid-annotations display/PixelDisplay name/string lc-name/string X/int Y/int W/int H/int:
+  label := Label --classes=["title"] --x=X --y=(Y - 30) --label="$(name) $(W)x$(H) = $(W * H) bytes"
   display.add label
 
   stride-y := Y + H * BYTE-SIZE
   label = Label
-      --style = stride-span-style
+      --classes = ["stride-label"]
       --x = X + W * BYTE-SIZE/2
       --y = stride-y + 25
       --label = "--$(lc-name)-line-stride=$W"
@@ -249,9 +306,9 @@ grid display/PixelDisplay grid-style/Style label-style/Style stride-span-style/S
   R := X + W * BYTE-SIZE
 
   [
-      Div --style=stride-span-style --x=X --y=(stride-y + 10) --w=(W * BYTE-SIZE + 1) --h=1,
-      Div --style=stride-span-style --x=X --y=(stride-y + 5) --w=1 --h=5,
-      Div --style=stride-span-style --x=R --y=(stride-y + 5) --w=1 --h=5,
+      Div --classes=["stride-line"] --x=X --y=(stride-y + 10) --w=(W * BYTE-SIZE + 1) --h=1,
+      Div --classes=["stride-line"] --x=X --y=(stride-y + 5) --w=1 --h=5,
+      Div --classes=["stride-line"] --x=R --y=(stride-y + 5) --w=1 --h=5,
   ].do: display.add it
 
   for y := 0; y < H; y++:
@@ -259,8 +316,8 @@ grid display/PixelDisplay grid-style/Style label-style/Style stride-span-style/S
     rhs := X + W * BYTE-SIZE
     y-line := Y + y * BYTE-SIZE + BYTE-SIZE/2
     [
-        Label --style=label-style --x=(X - 4) --y=y-coord --label="$(y * W)" --alignment=ALIGN-RIGHT,
-        Label --style=label-style --x=(rhs + 5) --y=y-coord --label="$(y * W + W - 1)" --alignment=ALIGN-LEFT,
-        Div --style=grid-style --x=(X - 3) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 3),
-        Div --style=grid-style --x=(rhs - BYTE-SIZE / 2) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 4),
+        Label --classes=["offset-label"] --x=(X - 4) --y=y-coord --label="$(y * W)" --alignment=ALIGN-RIGHT,
+        Label --classes=["offset-label"] --x=(rhs + 5) --y=y-coord --label="$(y * W + W - 1)" --alignment=ALIGN-LEFT,
+        Div --classes=["offset-line"] --x=(X - 3) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 3),
+        Div --classes=["offset-line"] --x=(rhs - BYTE-SIZE / 2) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 4),
     ].do: display.add it
