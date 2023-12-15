@@ -47,12 +47,12 @@ STYLE ::= Style
     --class-map = {
         "stride-line": Style --background=0xff0000,
         "stride-label": Style --color=0xff0000 --font=SANS-10,
-        "offset-line": Style --background=0x2828c8,
-        "offset-label": Style --color=0x2828c8 --font=SANS-10,
+        "slice-label": Style --color=0xff0000 --font=SANS-10,
         "title": Style --font=(Font [sans-24-bold.ASCII]) --color=0x323232,
     }
     --type-map = {
         "grid": Style --color=0x000000 { "square-size": BYTE-SIZE },
+        "grid-annotations": Style --color=0x2828c8 --font=SANS-10 { "square-size": BYTE-SIZE },
         "slice": Style --color=0xff0000 { "thickness": 3, "square-size": BYTE-SIZE },
         "picture": Style { "color-1": 0xff_be_aa, "color-0": 0xc0_96_6e, "square-size": BYTE-SIZE },
         "code": Style --font=CODE-FONT --color=0x000000 {
@@ -70,15 +70,13 @@ diagram filename/string --pixel-stride=1 --extra-code=null:
       Div --x=0 --y=0 --w=WIDTH --h=HEIGHT --background=0xffffff [
           Picture --x=SOURCE-X --y=SOURCE-Y "blit" --text-x=5 --text-y=(SOURCE-HEIGHT - 2) --w=SOURCE-WIDTH --h=SOURCE-HEIGHT,
           Grid --x=SOURCE-X --y=SOURCE-Y --width=SOURCE-WIDTH --height=SOURCE-HEIGHT,
+          GridOffsets --x=SOURCE-X --y=SOURCE-Y --width=SOURCE-WIDTH --height=SOURCE-HEIGHT,
           Slice --x=SOURCE-X --y=SOURCE-Y --byte-array-width=SOURCE-WIDTH 5 3 13 16,
           Picture --x=DEST-X --y=DEST-Y "b" --text-x=0 --text-y=12 --w=8 --h=13 --pixel-stride=pixel-stride,
           Grid --x=DEST-X --y=DEST-Y --width=DEST-WIDTH --height=DEST-HEIGHT,
+          GridOffsets --x=DEST-X --y=DEST-Y --width=DEST-WIDTH --height=DEST-HEIGHT,
           Slice --x=600 --y=130 --byte-array-width=4 1 0 3 2,
-          Label
-              --classes = ["stride-label"]
-              --x = 600 + 5 * BYTE-SIZE
-              --y = 150
-              --label = "= slice of byte array",
+          Label --x=600 + 5 * BYTE-SIZE --y=150 --classes=["slice-label"] --label="= slice of byte array",
           Code --x=50 --y=421 --w=500 --h=330 --id="code" """
                 // Copy 8x13 rectangle at (5, 4)
                 //   from source to dest.
@@ -109,7 +107,7 @@ diagram filename/string --pixel-stride=1 --extra-code=null:
 
   write-file "$(filename).png" driver display
 
-// Used to display the code snippet in the diagram.
+/// Used to display the code snippet in the diagram.
 class Code extends CustomElement:
   color/int := 0x000000
   color-comment/int := 0x0000ff
@@ -211,6 +209,7 @@ class Slice extends CustomElement:
     vertical_ canvas --x=(right * square-size_ - thickness) --y=((bottom - 1) * square-size_ - thickness) --h=square-size_
     horizontal_ canvas --x=0 --y=(bottom * square-size_ - thickness) --w=(right * square-size_)
 
+/// Draws a text with the pixels blown up to large squares.
 class Picture extends CustomElement:
   color-0/int := 0x000000
   color-1/int := 0xffffff
@@ -260,13 +259,14 @@ class Picture extends CustomElement:
 
 /// Draws a grid that represents a ByteArray used as a 2D bytemap.
 class Grid extends CustomElement:
-  color/int := ?
+  color_/int := ?
   width/int
   height/int
   square-size_/int := 20
 
-  constructor --.width --.height --x/int?=null --y/int?=null --.color/int?=0 --square-size/int=20:
+  constructor --.width --.height --x/int?=null --y/int?=null --color/int?=0 --square-size/int=20:
     square-size_ = square-size
+    color_ = color
     super --x=x --y=y --w=(square-size * width + 1) --h=(square-size * height + 1)
 
   type -> string: return "grid"
@@ -282,14 +282,66 @@ class Grid extends CustomElement:
     else:
       super key value
 
+  color= value/int -> none:
+    invalidate
+    color_ = value
+
   custom-draw canvas/Canvas:
     for y := 0; y <= height; y++:
-      canvas.rectangle 0 (y * square-size_) --w=(width * square-size_ + 1) --h=1 --color=color
+      canvas.rectangle 0 (y * square-size_) --w=(width * square-size_ + 1) --h=1 --color=color_
     for x := 0; x <= width; x++:
-      canvas.rectangle (x * square-size_) 0 --w=1 --h=(height * square-size_ + 1) --color=color
+      canvas.rectangle (x * square-size_) 0 --w=1 --h=(height * square-size_ + 1) --color=color_
+
+/// Draws a row of byte offset labels on each side of a grid.
+class GridOffsets extends CustomElement:
+  static X-PADDING_ ::= 50  // Ideally would depend on the height, width and font.
+  color_/int := ?
+  font_/Font? := null
+  width/int
+  height/int
+  square-size_/int := 20
+
+  constructor --.width --.height --x/int?=null --y/int?=null --color/int?=0 --square-size/int=20:
+    square-size_ = square-size
+    color_ = color
+    super --x=(x and x - X-PADDING_) --y=y --w=(width * square-size + 2 * X-PADDING_) --h=(height * square-size)
+
+  type -> string: return "grid-annotations"
+
+  set-attribute_ key/string value -> none:
+    if key == "color":
+      color = value
+    else if key == "square-size":
+      square-size_ = value
+      w = (square-size_ * width + 1 + 2 * X-PADDING_)
+      h = (square-size_ * height + 1)
+    else if key == "font":
+      invalidate
+      font_ = value
+    else:
+      super key value
+
+  color= value/int -> none:
+    invalidate
+    color_ = value
+
+  x= value/int -> none:
+    invalidate
+    super = value - X-PADDING_
+
+  custom-draw canvas/Canvas:
+    for y := 0; y < height; y++:
+      y-coord := y * square-size_ + 14
+      rhs := X-PADDING_ + width * square-size_
+      y-line := y * square-size_ + square-size_/2
+      pixel-width := font_.pixel-width "$(y * width)"
+      canvas.text (X-PADDING_ - 4 - pixel-width) y-coord --text="$(y * width)" --font=font_ --color=color_
+      canvas.text (rhs + 5) y-coord --text="$(y * width + width - 1)" --font=font_ --color=color_
+      canvas.rectangle (X-PADDING_ - 3) y-line --h=1 --w=((square-size_ / 2) + 3) --color=color_
+      canvas.rectangle (rhs - square-size_ / 2) y-line --h=1 --w=((square-size_ / 2) + 4) --color=color_
 
 /// Draws the annotations on a grid that represents a ByteArray used as a 2D bytemap.
-/// TODO: Rewrite with a custom element, instead of lots of Divs and Labels.
+/// The annotations are a title and a diagram for the line stride of the grid.
 add-grid-annotations display/PixelDisplay name/string lc-name/string X/int Y/int W/int H/int:
   label := Label --classes=["title"] --x=X --y=(Y - 30) --label="$(name) $(W)x$(H) = $(W * H) bytes"
   display.add label
@@ -310,14 +362,3 @@ add-grid-annotations display/PixelDisplay name/string lc-name/string X/int Y/int
       Div --classes=["stride-line"] --x=X --y=(stride-y + 5) --w=1 --h=5,
       Div --classes=["stride-line"] --x=R --y=(stride-y + 5) --w=1 --h=5,
   ].do: display.add it
-
-  for y := 0; y < H; y++:
-    y-coord := Y + y * BYTE-SIZE + 14
-    rhs := X + W * BYTE-SIZE
-    y-line := Y + y * BYTE-SIZE + BYTE-SIZE/2
-    [
-        Label --classes=["offset-label"] --x=(X - 4) --y=y-coord --label="$(y * W)" --alignment=ALIGN-RIGHT,
-        Label --classes=["offset-label"] --x=(rhs + 5) --y=y-coord --label="$(y * W + W - 1)" --alignment=ALIGN-LEFT,
-        Div --classes=["offset-line"] --x=(X - 3) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 3),
-        Div --classes=["offset-line"] --x=(rhs - BYTE-SIZE / 2) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 4),
-    ].do: display.add it
