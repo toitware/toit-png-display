@@ -4,6 +4,8 @@
 
 import png-display show *
 import pixel-display show *
+import pixel-display.element show *
+import pixel-display.style show *
 import pixel-display.true-color show *
 import font show *
 
@@ -11,13 +13,14 @@ import .write-file
 
 main args:
   driver := TrueColorPngDriver 104 50
-  display := TrueColorPixelDisplay driver
+  display := PixelDisplay.true-color driver
 
-  context := display.context --landscape --color=(get-rgb 255 128 128) --font=(Font.get "sans10")
-  blue := context.with --color=(get-rgb 30 40 255)
+  style := Style --color=(get-rgb 255 128 128) --font=(Font.get "sans10")
+  blue := Style --color=(get-rgb 30 40 255) --font=(Font.get "sans10")
 
-  display.text context 20 30 "Toit"
-  display.text blue 50 30 "50%"
+  display.add (Label --style=style --x=20 --y=30 --label="Toit")
+  display.add (Label --style=blue --x=50 --y=30 --label="50%")
+  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 

@@ -4,6 +4,8 @@
 
 import png-display show *
 import pixel-display show *
+import pixel-display.element show *
+import pixel-display.style show *
 import pixel-display.three-color show WHITE BLACK RED
 import font show *
 
@@ -11,14 +13,15 @@ import .write-file
 
 main args:
   driver := ThreeColorPngDriver 104 50
-  display := ThreeColorPixelDisplay driver
+  display := PixelDisplay.three-color driver
   display.background = WHITE
 
-  context := display.context --landscape --color=BLACK --font=(Font.get "sans10")
-  red := context.with --color=RED
+  style := Style --color=BLACK --font=(Font.get "sans10")
+  red := Style --color=RED --font=(Font.get "sans10")
 
-  display.text context 20 30 "Toit"
-  display.text red 60 30 "Red"
+  display.add (Label --style=style --x=20 --y=30 --label="Toit")
+  display.add (Label --style=red --x=60 --y=30 --label="Red")
+  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 

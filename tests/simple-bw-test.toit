@@ -4,6 +4,8 @@
 
 import png-display show *
 import pixel-display show *
+import pixel-display.element show *
+import pixel-display.style show *
 import pixel-display.two-color show WHITE BLACK
 import font show *
 
@@ -11,16 +13,17 @@ import .write-file
 
 main args:
   driver := TwoColorPngDriver 104 50
-  display := TwoColorPixelDisplay driver
+  display := PixelDisplay.two-color driver
   display.background = WHITE
 
   font := Font.get "sans10"
 
-  black := display.context --landscape --color=BLACK --font=font
-  white := display.context --landscape --color=WHITE --font=font
+  black := Style --background=BLACK --font=font
+  white := Style --color=WHITE --font=font
 
-  display.filled-rectangle black 15 15 40 30
-  display.text white 20 30 "Toit"
+  display.add (Div --style=black --x=15 --y=15 --w=40 --h=30)
+  display.add (Label --style=white --x=20 --y=30 --label="Toit")
+  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 

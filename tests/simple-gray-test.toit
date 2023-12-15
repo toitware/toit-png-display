@@ -4,23 +4,27 @@
 
 import png-display show *
 import pixel-display show *
+import pixel-display.element show *
 import pixel-display.four-gray show WHITE BLACK LIGHT-GRAY DARK-GRAY
+import pixel-display.style show *
 import font show *
 
 import .write-file
 
 main args:
   driver := FourGrayPngDriver 104 50
-  display := FourGrayPixelDisplay driver
+  display := PixelDisplay.four-gray driver
   display.background = WHITE
 
-  context := display.context --landscape --color=BLACK --font=(Font.get "sans10")
-  light-gray := context.with --color=LIGHT-GRAY
-  dark-gray := context.with --color=DARK-GRAY
+  font := Font.get "sans10"
+  style := Style --color=BLACK --font=font
+  light-gray := Style --color=LIGHT-GRAY --font=font
+  dark-gray := Style --color=DARK-GRAY --font=font
 
-  display.text context 5 30 "Toit"
-  display.text light-gray 35 20 "Light gray"
-  display.text dark-gray 35 40 "Dark gray"
+  display.add (Label --style=style --x=5 --y=30 --label="Toit")
+  display.add (Label --style=light-gray --x=35 --y=20 --label="Light gray")
+  display.add (Label --style=dark-gray --x=35 --y=40 --label="Dark gray")
+  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 

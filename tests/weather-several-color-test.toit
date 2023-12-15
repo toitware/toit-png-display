@@ -5,7 +5,9 @@
 import font show *
 import png-display show *
 import pixel-display show *
+import pixel-display.element show *
 import pixel-display.several-color show *
+import pixel-display.style show *
 import roboto.bold-36 as bold
 import roboto.black-36 as black
 import pictogrammers-icons.size-96 as icons
@@ -22,21 +24,25 @@ ORANGE ::= 6
 
 main args:
   driver := SeveralColorPngDriver 319 239
-  display := SeveralColorPixelDisplay driver
+  display := PixelDisplay.several-color driver
   display.background = BLACK
 
   font := Font [bold.ASCII, bold.LATIN-1-SUPPLEMENT]
   time-font := Font [black.ASCII]
 
-  context := display.context --landscape --color=ORANGE --font=font
-  icon-context := context.with --color=WHITE
-  time := context.with --color=GREEN --font=time-font
-  location-context := context.with --color=YELLOW
+  style := Style --color=ORANGE --font=font
+  icon-style := Style --color=WHITE
+  time := Style --color=GREEN --font=time-font
+  location-style := Style --color=YELLOW --font=font
 
-  display.text context 20 200 "Rain with thunder"
-  display.icon icon-context 200 120 icons.WEATHER-LIGHTNING-RAINY
-  display.text time 20 40 "13:37"
-  display.text location-context 20 100 "Borås"
+  [
+      Label --style=style --x=20 --y=200 --label="Rain with thunder",
+      Label --style=icon-style --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
+      Label --style=time --x=20 --y=40 --label="13:37",
+      Label --style=location-style --x=20 --y=100 --label="Borås",
+  ].do: display.add it
+
+  display.set-styles []  // Workaround.
 
   filename := args.size == 0 ? "-" : args[0]
 

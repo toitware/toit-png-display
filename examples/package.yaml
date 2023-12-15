@@ -1,3 +1,5 @@
+environment:
+  sdk: ^2.0.0-alpha.121
 dependencies:
   font_x11_adobe:
     url: github.com/toitlang/pkg-font-x11-adobe
