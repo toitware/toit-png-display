@@ -1,13 +1,16 @@
-// Copyright (C) 2021 Toitware ApS.
+// Copyright (C) 2023 Toitware ApS.
 // Use of this source code is governed by a Zero-Clause BSD license that can
 // be found in the EXAMPLES_LICENSE file.
 
-import bitmap show blit bytemap-draw-text ORIENTATION-0
+// TODO: Rewrite with a custom element, instead of lots of Divs and Labels.
+
+import bitmap show bytemap-draw-text ORIENTATION-0
 import font show *
 import pixel-display show *
-import pixel-display.true-color show *
 import png-display show *
-import pixel-display.texture show TEXT-TEXTURE-ALIGN-RIGHT TEXT-TEXTURE-ALIGN-LEFT TEXT-TEXTURE-ALIGN-CENTER
+import pixel-display show *
+import pixel-display.element show *
+import pixel-display.style show *
 
 import font-x11-adobe.sans-24-bold
 import font-x11-adobe.typewriter-14-bold
@@ -45,12 +48,14 @@ main:
 // Generates a PNG file showing how blit works.
 diagram filename/string --pixel-stride=1 --extra-code=null:
   driver := TrueColorPngDriver WIDTH HEIGHT
-  display := TrueColorPixelDisplay driver
+  display := PixelDisplay.true-color driver
 
-  stride-label := display.context --landscape --alignment=TEXT-TEXTURE-ALIGN-CENTER --color=(get-rgb 255 0 0) --font=SANS-10
+  stride-span-style := Style --color=0xff0000 --font=SANS-10 --background=0xff0000
+  stride-style := Style --background=0x2828c8 --font=SANS-10
+  stride-label-style := Style --color=0x2828c8 --font=SANS-10
 
-  grid display stride-label "Source" "source" SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT
-  grid display stride-label "Dest" "destination" DEST-X DEST-Y DEST-WIDTH DEST-HEIGHT
+  grid display stride-style stride-label-style stride-span-style "Source" "source" SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT
+  grid display stride-style stride-label-style stride-span-style "Dest" "destination" DEST-X DEST-Y DEST-WIDTH DEST-HEIGHT
 
   picture display "blit" 5 SOURCE-HEIGHT - 2 SOURCE-X SOURCE-Y SOURCE-WIDTH SOURCE-HEIGHT
 
@@ -61,13 +66,17 @@ diagram filename/string --pixel-stride=1 --extra-code=null:
 
   // Slice legend.
   slice display 600 130 4 3 1 0 3 2
-  left-align := stride-label.with --alignment=TEXT-TEXTURE-ALIGN-LEFT
-  display.text left-align 600 + 5 * BYTE-SIZE 150 "= slice of byte array"
+  display.add
+      Label
+          --style = stride-span-style
+          --x = 600 + 5 * BYTE-SIZE
+          --y = 150
+          --label = "= slice of byte array"
 
-  code-context := left-align.with --color=(get-rgb 0 0 0) --font=CODE-FONT
-  comment-context := left-align.with --color=(get-rgb 0 0 255) --font=CODE-FONT
-  literal-context := left-align.with --color=(get-rgb 255 192 192) --font=CODE-FONT
-  code := Code display 50 440 code-context comment-context literal-context
+  code-style := Style --color=0x000000 --font=CODE-FONT
+  comment-style := Style --color=0x0000ff --font=CODE-FONT
+  literal-style := Style --color=0xffc0c0 --font=CODE-FONT
+  code := Code display 50 440 CODE-FONT code-style comment-style literal-style
 
   code.line "// Copy 8x13 rectangle at (5, 4)"
   code.line "// from source to dest."
@@ -92,88 +101,100 @@ diagram filename/string --pixel-stride=1 --extra-code=null:
 
 // Used to display the code snippet in the diagram.
 class Code:
-  display := ?
-  x/int ::= ?
+  display/PixelDisplay
+  x/int
   y/int := ?
-  code-context := ?
-  comment-context := ?
-  literal-context := ?
+  font/Font
+  code-style/Style
+  comment-style/Style
+  literal-style/Style
 
-  constructor .display .x .y .code-context .comment-context .literal-context:
+  constructor .display .x .y .font .code-style .comment-style .literal-style:
 
   line text/string:
     comment := text.index-of "//"
     if comment != -1:
       code := text.copy 0 comment
-      width := code-context.font.pixel-width code
-      display.text comment-context x + width y (text.copy comment)
-      text = text.copy 0 comment
+      width := font.pixel-width code
+      display.add
+          Label --style=comment-style --x=(x + width) --y=y --label=text[comment..]
+      text = text[..comment]
     if text.size != 0 and ' ' <= text[text.size - 1] <= '9':
       literal := ""
       while ' ' <= text[text.size - 1] <= '9':
         literal = text[text.size - 1..] + literal
         text = text.copy 0 text.size - 1
-      width := code-context.font.pixel-width text
-      display.text literal-context x + width y literal
-    display.text code-context x y text
+      width := font.pixel-width text
+      display.add
+          Label --style=literal-style --x=(x + width) --y=y --label=literal
+    display.add
+        Label --style=code-style --x=x --y=y --label=text
     y += 19
 
 // Draws the outline of a slice on a ByteArray of size W * H.
 slice display X Y W H left top right bottom:
-  red-line := display.context --landscape --color=(get-rgb 255 0 0)
+  red-line := Style --background=0xff0000
 
-  display.filled-rectangle red-line
-    X
-    Y + (top + 1) * BYTE-SIZE
-    3
-    (bottom - top - 1) * BYTE-SIZE
+  display.add
+      Div --style=red-line
+          --x = X
+          --y = Y + (top + 1) * BYTE-SIZE
+          --w = 3
+          --h = (bottom - top - 1) * BYTE-SIZE
 
-  display.filled-rectangle red-line
-    X
-    Y + (top + 1) * BYTE-SIZE
-    left * BYTE-SIZE + 3
-    3
+  display.add
+      Div --style=red-line
+          --x = X
+          --y = Y + (top + 1) * BYTE-SIZE
+          --w = left * BYTE-SIZE + 3
+          --h = 3
 
-  display.filled-rectangle red-line
-    X + left * BYTE-SIZE
-    Y + top * BYTE-SIZE + 3
-    3
-    BYTE-SIZE
+  display.add
+      Div --style=red-line
+          --x = X + left * BYTE-SIZE
+          --y = Y + top * BYTE-SIZE + 3
+          --w = 3
+          --h = BYTE-SIZE
 
-  display.filled-rectangle red-line
-    X + left * BYTE-SIZE
-    Y + top * BYTE-SIZE
-    (W - left) * BYTE-SIZE
-    3
+  display.add
+      Div --style=red-line
+          --x = X + left * BYTE-SIZE
+          --y = Y + top * BYTE-SIZE
+          --w = (W - left) * BYTE-SIZE
+          --h = 3
 
-  display.filled-rectangle red-line
-    X + W * BYTE-SIZE - 3
-    Y + top * BYTE-SIZE
-    3
-    (bottom - top - 1) * BYTE-SIZE
+  display.add
+      Div --style=red-line
+          --x = X + W * BYTE-SIZE - 3
+          --y = Y + top * BYTE-SIZE
+          --w = 3
+          --h = (bottom - top - 1) * BYTE-SIZE
 
-  display.filled-rectangle red-line
-    X + right * BYTE-SIZE - 3
-    Y + (bottom - 1) * BYTE-SIZE - 3
-    (W - right) * BYTE-SIZE
-    3
+  display.add
+      Div --style=red-line
+          --x = X + right * BYTE-SIZE - 3
+          --y = Y + (bottom - 1) * BYTE-SIZE - 3
+          --w = (W - right) * BYTE-SIZE
+          --h = 3
 
-  display.filled-rectangle red-line
-    X + right * BYTE-SIZE - 3
-    Y + (bottom - 1) * BYTE-SIZE - 3
-    3
-    BYTE-SIZE
+  display.add
+      Div --style=red-line
+          --x = X + right * BYTE-SIZE - 3
+          --y = Y + (bottom - 1) * BYTE-SIZE - 3
+          --w = 3
+          --h = BYTE-SIZE
 
-  display.filled-rectangle red-line
-    X
-    Y + bottom * BYTE-SIZE - 3
-    right * BYTE-SIZE
-    3
+  display.add
+      Div --style=red-line
+          --x = X
+          --y = Y + bottom * BYTE-SIZE - 3
+          --w = right * BYTE-SIZE
+          --h = 3
 
 // Draws an image in the ByteArray (some letters).
-picture display/TrueColorPixelDisplay text/string text-x/int text-y/int X/int Y/int W/int H/int --pixel-stride=1:
-  fg := display.context --landscape --color=(get-rgb 255 190 170) --font=SANS-10
-  bg := display.context --landscape --color=(get-rgb 192 150 110) --font=SANS-10
+picture display/PixelDisplay text/string text-x/int text-y/int X/int Y/int W/int H/int --pixel-stride=1:
+  fg := Style --background=0xff_be_aa --font=SANS-10
+  bg := Style --background=0xc0_96_6e --font=SANS-10
 
   img := ByteArray W * H
 
@@ -181,61 +202,65 @@ picture display/TrueColorPixelDisplay text/string text-x/int text-y/int X/int Y/
 
   for y := 0; y < H; y++:
     for x := 0; x < W; x++:
-      display.filled-rectangle
-        img[y * W + x] == 0 ? bg : fg
-        X + (x * pixel-stride) * BYTE-SIZE + 1
-        Y + y * BYTE-SIZE + 1
-        BYTE-SIZE - 1
-        BYTE-SIZE - 1
+      rect := Div
+        --style = img[y * W + x] == 0 ? bg : fg
+        --x = X + (x * pixel-stride) * BYTE-SIZE + 1
+        --y = Y + y * BYTE-SIZE + 1
+        --w = BYTE-SIZE - 1
+        --h = BYTE-SIZE - 1
+      display.add rect
 
 // Draws a grid that represents a ByteArray used as a 2D bytemap.
-grid display label-context name lc-name X Y W H:
-  context := display.context --landscape --color=BLACK --font=SANS-10
+grid display/PixelDisplay grid-style/Style label-style/Style stride-span-style/Style name/string lc-name/string X/int Y/int W/int H/int:
+  style := Style --background=0x000000
 
   for y := 0; y <= H; y++:
-    y-coord := Y + y * BYTE-SIZE
-    display.line context X y-coord
-      X + BYTE-SIZE * W + 1
-      y-coord
+    display.add
+        Div
+            --style = style
+            --x = X
+            --y = Y + y * BYTE-SIZE
+            --w = BYTE-SIZE * W + 1
+            --h = 1
 
   for x := 0; x <= W; x++:
-    x-coord := X + x * BYTE-SIZE
-    display.line context x-coord Y
-      x-coord
-      Y + BYTE-SIZE * H + 1
+    display.add
+        Div
+            --style = style
+            --x = X + x * BYTE-SIZE
+            --y = Y
+            --w = 1
+            --h = BYTE-SIZE * H + 1
 
-  title-font := context.with --font=(Font [sans-24-bold.ASCII]) --color=(get-rgb 50 50 50)
+  title-font := Style --font=(Font [sans-24-bold.ASCII]) --color=0x323232
 
-  display.text title-font X Y - 30 "$name $(W)x$H = $(W * H) bytes"
-
-  left-labels := context.with --alignment=TEXT-TEXTURE-ALIGN-RIGHT --color=(get-rgb 40 40 200)
-  right-labels := left-labels.with --alignment=TEXT-TEXTURE-ALIGN-LEFT
+  label := Label --style=title-font --x=X --y=(Y - 30) --label="$(name) $(W)x$(H) = $(W * H) bytes"
+  display.add label
 
   stride-y := Y + H * BYTE-SIZE
-  display.text label-context
-    X + W * BYTE-SIZE/2
-    stride-y + 25
-    "--$(lc-name)_line-stride=$W"
+  label = Label
+      --style = stride-span-style
+      --x = X + W * BYTE-SIZE/2
+      --y = stride-y + 25
+      --label = "--$(lc-name)-line-stride=$W"
+      --alignment = ALIGN-CENTER
+  display.add label
 
-  R := X + W * BYTE-SIZE + 1
+  R := X + W * BYTE-SIZE
 
-  display.line label-context X stride-y + 10 R stride-y + 10
-  display.line label-context X stride-y + 10 X stride-y + 5
-  display.line label-context R stride-y + 10 R stride-y + 5
+  [
+      Div --style=stride-span-style --x=X --y=(stride-y + 10) --w=(W * BYTE-SIZE + 1) --h=1,
+      Div --style=stride-span-style --x=X --y=(stride-y + 5) --w=1 --h=5,
+      Div --style=stride-span-style --x=R --y=(stride-y + 5) --w=1 --h=5,
+  ].do: display.add it
 
   for y := 0; y < H; y++:
     y-coord := Y + y * BYTE-SIZE + 14
     rhs := X + W * BYTE-SIZE
-    display.text left-labels X - 4 y-coord "$(y * W)"
-    display.text right-labels rhs + 5 y-coord "$(y * W + W - 1)"
     y-line := Y + y * BYTE-SIZE + BYTE-SIZE/2
-    display.line left-labels
-      X - 3
-      y-line
-      X + BYTE-SIZE/2
-      y-line
-    display.line right-labels
-      rhs + 4
-      y-line
-      rhs - BYTE-SIZE/2
-      y-line
+    [
+        Label --style=label-style --x=(X - 4) --y=y-coord --label="$(y * W)" --alignment=ALIGN-RIGHT,
+        Label --style=label-style --x=(rhs + 5) --y=y-coord --label="$(y * W + W - 1)" --alignment=ALIGN-LEFT,
+        Div --style=grid-style --x=(X - 3) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 3),
+        Div --style=grid-style --x=(rhs - BYTE-SIZE / 2) --y=y-line --h=1 --w=((BYTE-SIZE / 2) + 4),
+    ].do: display.add it
