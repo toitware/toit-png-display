@@ -56,9 +56,11 @@ main:
   DIAMETER ::= 56
   CORNER-RADIUS ::= DIAMETER / 2
 
+  display.background = BLACK
+
   STYLE ::= Style
       --class-map = {
-          "top": Style --x=0 --y=0 --w=WIDTH --h=HEIGHT --background=BLACK,
+          "top": Style --x=0 --y=0 --w=WIDTH --h=HEIGHT --background=BLACK --border=(RoundedCornerBorder --radius=8),
           "rounded": Style --x=68 --y=4
               --w = DIAMETER
               --h = DIAMETER
@@ -74,7 +76,7 @@ main:
       }
 
   display.add
-      Div --classes=["top"] [
+      Div.clipping --classes=["top"] [
           Div.clipping --classes=["rounded"] [
               Label --id="icon",
           ],
