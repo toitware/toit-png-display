@@ -12,8 +12,9 @@ import monitor show Mutex
 import pictogrammers-icons.size-48 as icons
 
 import pixel-display.two-color show *
-import pixel-display.texture show *
-import pixel-display show TwoColorPixelDisplay
+import pixel-display show *
+import pixel-display.element show *
+import pixel-display.style show *
 
 import png-display show *
 
@@ -39,57 +40,65 @@ WMO-4501-ICONS ::= [
 // have access one at a time.
 display-mutex := Mutex
 
-driver := TwoColorPngDriver 128 64
-display:= TwoColorPixelDisplay driver
+WIDTH ::= 128
+HEIGHT ::= 64
+
+driver := TwoColorPngDriver WIDTH HEIGHT
+display:= PixelDisplay.two-color driver
 
 main:
   sans-14-font ::= Font [
     sans-14-bold.ASCII,  // Regular characters.
     sans-14-bold.LATIN-1-SUPPLEMENT,  // Degree symbol.
   ]
-  display.background = BLACK
-  context := display.context
-    --landscape
-    --color=WHITE
-    --font=sans-14-font
-  black-context := context.with --color=BLACK
 
-  // White circle as background of weather icon.  We are
-  // just using the window to draw a circle here, not as an
-  // actual window with its own textures.
+  // Circle as background of weather icon.
   DIAMETER ::= 56
   CORNER-RADIUS ::= DIAMETER / 2
+
+  display.background = BLACK
+
+  STYLE ::= Style
+      --class-map = {
+          "top": Style --x=0 --y=0 --w=WIDTH --h=HEIGHT --background=BLACK --border=(RoundedCornerBorder --radius=8),
+          "rounded": Style --x=68 --y=4
+              --w = DIAMETER
+              --h = DIAMETER
+              --border = RoundedCornerBorder --radius=CORNER-RADIUS
+              --background = WHITE,
+          "temp-box": Style --x=0 --y=0 --w=64 --h=32 --background=WHITE,
+          "clock-box": Style --x=0 --y=32 --w=64 --h=32 --background=BLACK,
+      }
+      --id-map = {
+          "icon": Style --x=(DIAMETER / 2) --y=(16 + DIAMETER / 2) --color=BLACK { "alignment": ALIGN-CENTER },
+          "temp": Style --x=32 --y=23 --font=sans-14-font --color=BLACK { "alignment": ALIGN-CENTER },
+          "time": Style --x=32 --y=23 --font=sans-14-font --color=WHITE { "alignment": ALIGN-CENTER },
+      }
+
   display.add
-    RoundedCornerWindow 68 4 DIAMETER DIAMETER
-      context.transform
-      CORNER-RADIUS
-      WHITE
-  // Icon is added after the white dot so it is in a higher
-  // layer.
-  icon-texture :=
-    display.icon black-context 72 48 icons.WEATHER-CLOUDY
+      Div.clipping --classes=["top"] [
+          Div.clipping --classes=["rounded"] [
+              Label --id="icon",
+          ],
+          Div --classes=["temp-box"] [
+              Label --id="temp",
+          ],
+          Div --classes=["clock-box"] [
+              Label --id="time",
+          ],
+      ]
 
-  // Temperature is black on white.
-  display.filled-rectangle context 0 0 64 32
-  temperature-context :=
-    black-context.with --alignment=TEXT-TEXTURE-ALIGN-CENTER
-  temperature-texture :=
-    display.text temperature-context 32 23 "??°C"
+  display.set-styles [STYLE]
 
-  // Time is white on the black background, aligned by the
-  // center so it looks right relative to the temperature
-  // without having to zero-pad the hours.
-  time-context := context.with --alignment=TEXT-TEXTURE-ALIGN-CENTER
-  time-texture := display.text time-context 32 53 "??:??"
-
-  task --background:: clock-task time-texture
-  task --background:: weather-task icon-texture temperature-texture
+  task --background:: clock-task (display.get-element-by-id "time")
+  task --background:: weather-task (display.get-element-by-id "icon") (display.get-element-by-id "temp")
 
   sleep --ms=100
   write-file "docs-example.png" driver display
 
-weather-task weather-icon/IconTexture temperature-texture/TextTexture:
+weather-task weather-icon/Label temperature-element/Label:
   while true:
+    // Simulate getting weather data from some JSON source.
     map := json.parse """
       {"wmo-4501": $(random 8),
        "temperature-c": 24.1,
@@ -98,15 +107,15 @@ weather-task weather-icon/IconTexture temperature-texture/TextTexture:
     temp := map["temperature-c"]
     display-mutex.do:
       weather-icon.icon = WMO-4501-ICONS[code]
-      temperature-texture.text = "$(%.1f temp)°C"
+      temperature-element.label = "$(%.1f temp)°C"
     sleep --ms=1000
 
-clock-task time-texture:
+clock-task time-element/Label:
   while true:
     now := (Time.now).local
     display-mutex.do:
       // H:MM or HH:MM depending on time of day.
-      time-texture.text = "$now.h:$(%02d now.m)"
+      time-element.label = "$now.h:$(%02d now.m)"
     // Sleep this task until the next whole minute.
     sleep-time := 60 - now.s
     sleep --ms=sleep-time*1000

@@ -4,12 +4,11 @@
 
 import png-display show *
 import pixel-display show *
-import pixel-display.true-color show *
 
 import .write-file
 
 main:
   driver := TrueColorPngDriver 1 1
-  display := TrueColorPixelDisplay driver
+  display := PixelDisplay.true-color driver
   print "Writing out.png"
   write-file "1x2.png" driver display

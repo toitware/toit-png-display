@@ -1,3 +1,4 @@
+sdk: ^2.0.0-alpha.121
 prefixes:
   font_x11_adobe: pkg-font-x11-adobe
   host: pkg-host
@@ -33,5 +34,12 @@ packages:
   toit-pixel-display:
     url: github.com/toitware/toit-pixel-display
     name: pixel_display
-    version: 1.6.1
-    hash: 61693447fcf73e7dd4044780fd7991c2d371b7ec
+    version: 2.0.1
+    hash: a7a890177191012ed0c20f348b4cee35dc8849b3
+    prefixes:
+      png-tools: toit-png-tools
+  toit-png-tools:
+    url: github.com/toitware/toit-png-tools
+    name: png-tools
+    version: 1.0.0
+    hash: ee472ac9d4333a138206f9d3a817d3c5432d6f87
