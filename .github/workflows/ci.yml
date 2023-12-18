@@ -69,7 +69,7 @@ jobs:
           ninja --version
           cmake --version
 
-      - uses: suisei-cn/actions-download-file@v1.3.0
+      - uses: suisei-cn/actions-download-file@v1.4.0
         name: Download Toit
         with:
           url: ${{ env.TOIT_URL }}
