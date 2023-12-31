@@ -107,7 +107,7 @@ weather-task weather-icon/Label temperature-element/Label:
     temp := map["temperature-c"]
     display-mutex.do:
       weather-icon.icon = WMO-4501-ICONS[code]
-      temperature-element.label = "$(%.1f temp)°C"
+      temperature-element.text = "$(%.1f temp)°C"
     sleep --ms=1000
 
 clock-task time-element/Label:
@@ -115,7 +115,7 @@ clock-task time-element/Label:
     now := (Time.now).local
     display-mutex.do:
       // H:MM or HH:MM depending on time of day.
-      time-element.label = "$now.h:$(%02d now.m)"
+      time-element.text = "$now.h:$(%02d now.m)"
     // Sleep this task until the next whole minute.
     sleep-time := 60 - now.s
     sleep --ms=sleep-time*1000
