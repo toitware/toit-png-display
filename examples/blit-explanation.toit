@@ -76,7 +76,7 @@ diagram filename/string --pixel-stride=1 --extra-code=null:
           Grid --x=DEST-X --y=DEST-Y --width=DEST-WIDTH --height=DEST-HEIGHT,
           GridOffsets --x=DEST-X --y=DEST-Y --width=DEST-WIDTH --height=DEST-HEIGHT,
           Slice --x=600 --y=130 --byte-array-width=4 1 0 3 2,
-          Label --x=600 + 5 * BYTE-SIZE --y=150 --classes=["slice-label"] --label="= slice of byte array",
+          Label --x=600 + 5 * BYTE-SIZE --y=150 --classes=["slice-label"] --text="= slice of byte array",
           Code --x=50 --y=421 --w=500 --h=330 --id="code" """
                 // Copy 8x13 rectangle at (5, 4)
                 //   from source to dest.
@@ -343,7 +343,7 @@ class GridOffsets extends CustomElement:
 /// Draws the annotations on a grid that represents a ByteArray used as a 2D bytemap.
 /// The annotations are a title and a diagram for the line stride of the grid.
 add-grid-annotations display/PixelDisplay name/string lc-name/string X/int Y/int W/int H/int:
-  label := Label --classes=["title"] --x=X --y=(Y - 30) --label="$(name) $(W)x$(H) = $(W * H) bytes"
+  label := Label --classes=["title"] --x=X --y=(Y - 30) --text="$(name) $(W)x$(H) = $(W * H) bytes"
   display.add label
 
   stride-y := Y + H * BYTE-SIZE
@@ -351,7 +351,7 @@ add-grid-annotations display/PixelDisplay name/string lc-name/string X/int Y/int
       --classes = ["stride-label"]
       --x = X + W * BYTE-SIZE/2
       --y = stride-y + 25
-      --label = "--$(lc-name)-line-stride=$W"
+      --text = "--$(lc-name)-line-stride=$W"
       --alignment = ALIGN-CENTER
   display.add label
 

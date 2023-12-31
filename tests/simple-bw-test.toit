@@ -22,7 +22,7 @@ main args:
   white := Style --color=WHITE --font=font
 
   display.add (Div --style=black --x=15 --y=15 --w=40 --h=30)
-  display.add (Label --style=white --x=20 --y=30 --label="Toit")
+  display.add (Label --style=white --x=20 --y=30 --text="Toit")
 
   filename := args.size == 0 ? "-" : args[0]
 
