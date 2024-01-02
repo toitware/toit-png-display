@@ -18,8 +18,8 @@ main args:
   style := Style --color=(get-rgb 255 128 128) --font=(Font.get "sans10")
   blue := Style --color=(get-rgb 30 40 255) --font=(Font.get "sans10")
 
-  display.add (Label --style=style --x=20 --y=30 --label="Toit")
-  display.add (Label --style=blue --x=50 --y=30 --label="50%")
+  display.add (Label --style=style --x=20 --y=30 --text="Toit")
+  display.add (Label --style=blue --x=50 --y=30 --text="50%")
 
   filename := args.size == 0 ? "-" : args[0]
 

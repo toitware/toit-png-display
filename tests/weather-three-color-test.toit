@@ -28,10 +28,10 @@ main args:
   location-style := Style --color=RED --font=font
 
   [
-      Label --style=style --x=20 --y=200 --label="Rain with thunder",
+      Label --style=style --x=20 --y=200 --text="Rain with thunder",
       Label --style=icon-style --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
-      Label --style=time --x=20 --y=40 --label="13:37",
-      Label --style=location-style --x=20 --y=100 --label="Borås",
+      Label --style=time --x=20 --y=40 --text="13:37",
+      Label --style=location-style --x=20 --y=100 --text="Borås",
   ].do: display.add it
 
   filename := args.size == 0 ? "-" : args[0]

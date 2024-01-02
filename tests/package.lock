@@ -34,8 +34,8 @@ packages:
   toit-pixel-display:
     url: github.com/toitware/toit-pixel-display
     name: pixel_display
-    version: 2.0.1
-    hash: a7a890177191012ed0c20f348b4cee35dc8849b3
+    version: 2.3.0
+    hash: 4a6f7c4c30152ec3c80b6cbe765133ce9015dab0
     prefixes:
       png-tools: toit-png-tools
   toit-png-tools:
