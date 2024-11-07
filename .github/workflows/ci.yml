@@ -21,33 +21,10 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup constants
-        shell: bash
-        run: |
-          export DOWNLOAD_DIR="${{ github.workspace }}/downloads"
-          echo "DOWNLOAD_DIR=$DOWNLOAD_DIR" >> $GITHUB_ENV
-          if [[ "$RUNNER_OS" = "Linux" ]]; then
-            TOIT_FILE=toit-linux.tar.gz
-            echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run" >> $GITHUB_ENV
-            echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg" >> $GITHUB_ENV
-          elif [[ "$RUNNER_OS" = "macOS" ]]; then
-            TOIT_FILE=toit-macos.tar.gz
-            echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run" >> $GITHUB_ENV
-            echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg" >> $GITHUB_ENV
-          elif [[ "$RUNNER_OS" = "Windows" ]]; then
-            TOIT_FILE=toit-windows.tar.gz
-            echo "TOIT_EXEC=$DOWNLOAD_DIR/toit/bin/toit.run.exe" >> $GITHUB_ENV
-            echo "TPKG_EXEC=$DOWNLOAD_DIR/toit/bin/toit.pkg.exe" >> $GITHUB_ENV
-          else
-            echo "UNSUPPORTED RUNNER: $RUNNER_OS"
-            exit 1
-          fi
-
-          if [[ $TOIT_VERSION = latest ]]; then
-            echo "TOIT_URL=https://github.com/toitlang/toit/releases/latest/download/$TOIT_FILE" >> $GITHUB_ENV
-          else
-            echo "TOIT_URL=https://github.com/toitlang/toit/releases/download/$TOIT_VERSION/$TOIT_FILE" >> $GITHUB_ENV
-          fi
+      - name: Install Toit SDK
+        uses: toitlang/action-setup@v1
+        with:
+          toit-version: ${{ env.TOIT_VERSION }}
 
       # Fetch the dependencies. Different for each platform.
       - name: Install dependencies - Linux
