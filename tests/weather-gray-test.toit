@@ -12,7 +12,7 @@ import roboto.bold-36 as bold
 import roboto.black-36 as black
 import pictogrammers-icons.size-96 as icons
 
-import .write-file
+import .gold
 
 main args:
   driver := GrayScalePngDriver 319 239
@@ -36,7 +36,4 @@ main args:
 
   display.set-styles []  // Workaround.
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display
