@@ -9,7 +9,7 @@ import pixel-display.style show *
 import pixel-display.true-color show *
 import font show *
 
-import .write-file
+import .gold
 
 main args:
   driver := TrueColorPngDriver 104 50
@@ -21,7 +21,4 @@ main args:
   display.add (Label --style=style --x=20 --y=30 --text="Toit")
   display.add (Label --style=blue --x=50 --y=30 --text="50%")
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display

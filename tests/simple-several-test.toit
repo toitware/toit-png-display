@@ -9,7 +9,7 @@ import pixel-display.several-color
 import pixel-display.style show *
 import font show *
 
-import .write-file
+import .gold
 
 WHITE ::= 0
 BLACK ::= 1
@@ -33,7 +33,4 @@ main args:
   display.add (Label --style=orange --x=35 --y=20 --text="Orange")
   display.add (Label --style=blue --x=35 --y=40 --text="Blue")
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display

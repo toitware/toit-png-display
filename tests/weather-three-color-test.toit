@@ -12,7 +12,7 @@ import roboto.bold-36 as bold
 import roboto.black-36 as black
 import pictogrammers-icons.size-96 as icons
 
-import .write-file
+import .gold
 
 main args:
   driver := ThreeColorPngDriver 320 239
@@ -34,9 +34,6 @@ main args:
       Label --style=location-style --x=20 --y=100 --text="Borås",
   ].do: display.add it
 
-  filename := args.size == 0 ? "-" : args[0]
-
   display.set-styles []  // Workaround.
 
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display

@@ -9,7 +9,7 @@ import pixel-display.four-gray show WHITE BLACK LIGHT-GRAY DARK-GRAY
 import pixel-display.style show *
 import font show *
 
-import .write-file
+import .gold
 
 main args:
   driver := FourGrayPngDriver 104 50
@@ -25,7 +25,4 @@ main args:
   display.add (Label --style=light-gray --x=35 --y=20 --text="Light gray")
   display.add (Label --style=dark-gray --x=35 --y=40 --text="Dark gray")
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display

@@ -9,7 +9,7 @@ import pixel-display.style show *
 import pixel-display.three-color show WHITE BLACK RED
 import font show *
 
-import .write-file
+import .gold
 
 main args:
   driver := ThreeColorPngDriver 104 50
@@ -22,7 +22,4 @@ main args:
   display.add (Label --style=style --x=20 --y=30 --text="Toit")
   display.add (Label --style=red --x=60 --y=30 --text="Red")
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display

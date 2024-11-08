@@ -12,7 +12,7 @@ import roboto.bold-36 as bold
 import roboto.black-36 as black
 import pictogrammers-icons.size-96 as icons
 
-import .write-file
+import .gold
 
 main args:
   driver := TrueColorPngDriver 320 240
@@ -27,7 +27,7 @@ main args:
   time := Style --color=(get-rgb 200 100 80) --font=time-font
   location-style := Style --color=(get-rgb 255 240 230) --font=font
 
-  [  
+  [
       Label --style=style --x=20 --y=200 --text="Rain with thunder",
       Label --style=icon-style --x=200 --y=120 --icon=icons.WEATHER-LIGHTNING-RAINY,
       Label --style=time --x=20 --y=40 --text="13:37",
@@ -36,7 +36,4 @@ main args:
 
   display.set-styles []  // Workaround.
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display

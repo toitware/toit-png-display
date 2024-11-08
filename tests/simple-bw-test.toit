@@ -9,7 +9,7 @@ import pixel-display.style show *
 import pixel-display.two-color show WHITE BLACK
 import font show *
 
-import .write-file
+import .gold
 
 main args:
   driver := TwoColorPngDriver 104 50
@@ -24,7 +24,4 @@ main args:
   display.add (Div --style=black --x=15 --y=15 --w=40 --h=30)
   display.add (Label --style=white --x=20 --y=30 --text="Toit")
 
-  filename := args.size == 0 ? "-" : args[0]
-
-  print "Writing $filename"
-  write-file filename driver display
+  check-gold driver display
