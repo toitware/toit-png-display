@@ -2,9 +2,8 @@
 // Use of this source code is governed by an MIT-style license that can be
 // found in the LICENSE file.
 
-import binary show BIG-ENDIAN byte-swap-32
+import io show BIG-ENDIAN Buffer ByteOrder
 import bitmap show *
-import bytes show Buffer
 import crypto.crc show *
 import monitor show Latch
 import pixel-display show *
@@ -260,7 +259,7 @@ abstract class PngDriver_ extends AbstractDriver:
     y_ = 0
 
     task::
-      while data := compressor_.reader.read:
+      while data := compressor_.in.read:
         compressed_.write data
         if (not reproducible) and compressed_.size > 1900:
           write-chunk writeable_ "IDAT" compressed_.bytes  // Flush compressed pixel data.
@@ -273,7 +272,7 @@ abstract class PngDriver_ extends AbstractDriver:
     several-color := flags & FLAG-SEVERAL-COLOR != 0
     height.repeat: | y |
       if y_ >= this.height: return
-      compressor_.write zero-byte  // Adaptive scheme.
+      compressor_.out.write zero-byte  // Adaptive scheme.
       line-size := width-to-byte-width width
       index := y * line-size
       line := buffer[index..index + line-size]
@@ -281,11 +280,11 @@ abstract class PngDriver_ extends AbstractDriver:
         line = ByteArray line.size: line[it] ^ 0xff
       else if several-color:
         line = ByteArray line.size: min 6 line[it]
-      compressor_.write line
+      compressor_.out.write line
       y_++
 
   write-footer_:
-    compressor_.close
+    compressor_.out.close
 
     // Wait for the reader task to finish.
     done_.get
@@ -302,7 +301,7 @@ abstract class PngDriver_ extends AbstractDriver:
 
 byte-swap_ ba/ByteArray -> ByteArray:
   result := ba.copy
-  byte-swap-32 result
+  ByteOrder.swap-32 result
   return result
 
 /**
