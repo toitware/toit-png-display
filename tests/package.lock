@@ -1,4 +1,4 @@
-sdk: ^2.0.0-alpha.144
+sdk: ^2.0.0-alpha.170
 prefixes:
   font_x11_adobe: pkg-font-x11-adobe
   fs: pkg-fs
@@ -27,13 +27,13 @@ packages:
   pkg-host:
     url: github.com/toitlang/pkg-host
     name: host
-    version: 1.15.3
-    hash: 62393e8522b77eafbafe60b9817935266117daf6
+    version: 1.16.2
+    hash: ae83f761db80166a20bb38498edd009916b72563
   toit-font-google-100dpi-roboto:
     url: github.com/toitware/toit-font-google-100dpi-roboto
     name: roboto
-    version: 1.1.0
-    hash: 7f34330ed3cfbae1f077f1bd7fa48d4ad484b291
+    version: 1.3.0
+    hash: 833bf8b95938537c761e122026b6e62b03cb0762
   toit-icons-pictogrammers:
     url: github.com/toitware/toit-icons-pictogrammers
     name: pictogrammers_icons
@@ -42,8 +42,8 @@ packages:
   toit-pixel-display:
     url: github.com/toitware/toit-pixel-display
     name: pixel_display
-    version: 2.3.0
-    hash: 4a6f7c4c30152ec3c80b6cbe765133ce9015dab0
+    version: 2.11.0
+    hash: 59a4be9f0e6aa2321c6a032da44776f59af364b5
     prefixes:
       png-tools: toit-png-tools
   toit-png-tools:
